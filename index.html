@@ -23,8 +23,8 @@
         
         :root {
             --bg-primary: #0a0a12;
-            --bg-secondary: #0f0f1f;
-            --bg-card: #16162e;
+            --bg-secondary: #111122;
+            --bg-card: #1a1a2e;
             --bg-input: #0d0d1a;
             --border-color: #2a2a4a;
             --border-hover: #6d28d9;
@@ -63,7 +63,7 @@
            APP CONTAINER
            ========================================== */
         .app {
-            max-width: 1200px;
+            max-width: 1100px;
             width: 100%;
             background: var(--bg-secondary);
             border-radius: 24px;
@@ -71,7 +71,6 @@
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow);
             min-height: 90vh;
-            position: relative;
         }
         
         /* ==========================================
@@ -84,8 +83,6 @@
             padding-bottom: 14px;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
         }
         
         .logo {
@@ -94,7 +91,7 @@
             gap: 10px;
             cursor: pointer;
         }
-        .logo span { font-size: 28px; font-weight: 900; color: var(--primary); }
+        .logo-icon { font-size: 28px; font-weight: 900; color: var(--primary); }
         .logo-text {
             font-size: 22px;
             font-weight: 900;
@@ -106,7 +103,7 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
         
         .user-badge {
@@ -130,7 +127,11 @@
             justify-content: center;
             font-weight: 700;
             font-size: 14px;
+            cursor: pointer;
+            overflow: hidden;
+            flex-shrink: 0;
         }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         .btn {
             padding: 8px 20px;
@@ -242,7 +243,7 @@
            ========================================== */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin-bottom: 24px;
         }
@@ -261,75 +262,49 @@
            ========================================== */
         .success-center {
             text-align: center;
-            padding: 30px 20px;
+            padding: 24px 20px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             margin-bottom: 24px;
         }
-        .success-center .icon { font-size: 48px; margin-bottom: 8px; }
-        .success-center h2 { font-size: 28px; font-weight: 800; color: var(--success); }
+        .success-center .icon { font-size: 40px; margin-bottom: 4px; }
+        .success-center h2 { font-size: 24px; font-weight: 800; color: var(--success); }
         .success-center p { color: var(--text-secondary); font-size: 14px; }
         
         /* ==========================================
-           SIDE MENU
+           CONTENT
            ========================================== */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 24px;
-        }
+        .content { max-width: 800px; margin: 0 auto; }
         
-        .side-menu {
+        /* ==========================================
+           NEW TRADE
+           ========================================== */
+        .new-trade-box {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 16px 0;
-            height: fit-content;
-            position: sticky;
-            top: 20px;
+            padding: 24px;
+            max-width: 500px;
+            margin: 0 auto;
         }
-        .side-menu .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 14px;
-            cursor: pointer;
-            transition: var(--transition);
+        .new-trade-box .form-group { margin-bottom: 14px; }
+        .new-trade-box .form-group label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+        .new-trade-box .form-group input {
             width: 100%;
-            text-align: left;
-            border-left: 3px solid transparent;
+            padding: 10px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
         }
-        .side-menu .menu-item:hover { color: white; background: rgba(124, 58, 237, 0.05); }
-        .side-menu .menu-item.active {
-            color: var(--primary);
-            border-left-color: var(--primary);
-            background: rgba(124, 58, 237, 0.08);
-        }
-        .side-menu .menu-item .icon { font-size: 18px; }
-        
-        .side-menu .divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 8px 16px;
-        }
-        
-        /* ==========================================
-           PAGES
-           ========================================== */
-        .page { display: none; }
-        .page.active { display: block; }
+        .new-trade-box .form-group input:focus { outline: none; border-color: var(--primary); }
         
         /* ==========================================
            TRADE LIST
            ========================================== */
         .trade-list { display: flex; flex-direction: column; gap: 14px; }
-        
         .trade-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -351,7 +326,10 @@
             background: linear-gradient(135deg, var(--primary), var(--accent));
             display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: 13px;
+            flex-shrink: 0;
+            overflow: hidden;
         }
+        .trade-card .top .left .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
         .trade-card .top .left .info h4 { font-size: 15px; font-weight: 700; }
         .trade-card .top .left .info p { font-size: 12px; color: var(--text-muted); }
         .trade-card .status-badge {
@@ -363,7 +341,7 @@
         .status-open { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
         .status-pending { background: rgba(245, 158, 11, 0.12); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.15); }
         .status-completed { background: rgba(124, 58, 237, 0.12); color: var(--accent); border: 1px solid rgba(124, 58, 237, 0.15); }
-        .trade-card .bottom { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .trade-card .bottom { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
         
         /* ==========================================
            TRADE ROOM
@@ -402,7 +380,7 @@
             border-radius: var(--radius-sm);
             padding: 18px 20px;
         }
-        .trade-room .player-panel .header {
+        .trade-room .player-panel .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -410,7 +388,7 @@
             padding-bottom: 10px;
             margin-bottom: 12px;
         }
-        .trade-room .player-panel .header h4 { font-size: 15px; }
+        .trade-room .player-panel .panel-header h4 { font-size: 15px; }
         .trade-room .player-panel .ready-badge {
             padding: 3px 12px;
             border-radius: 40px;
@@ -419,63 +397,83 @@
         }
         .ready-yes { background: rgba(16, 185, 129, 0.12); color: var(--success); }
         .ready-no { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-        .trade-room .player-panel .data-display {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
+        .trade-room .player-panel .data-display { font-size: 13px; color: var(--text-secondary); }
         .trade-room .player-panel .data-display .label { color: var(--text-muted); font-size: 11px; }
         .trade-room .player-panel .data-display .value { color: white; font-weight: 500; }
         .trade-room .player-panel .data-display .value.hidden { color: var(--text-muted); font-style: italic; }
-        
-        .trade-room .reveal-section {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        
-        /* ==========================================
-           PROFILE
-           ========================================== */
-        .profile-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 24px;
-        }
-        .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
-        .profile-header .avatar-lg { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 28px; }
-        .profile-header .info h3 { font-size: 20px; }
-        .profile-header .info p { color: var(--text-secondary); font-size: 14px; }
-        .profile-detail { border-top: 1px solid var(--border-color); padding-top: 14px; }
-        .profile-detail p { color: var(--text-secondary); font-size: 14px; margin-bottom: 4px; }
-        .profile-detail strong { color: var(--primary); }
-        .profile-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
-        .profile-edit .form-group { margin-bottom: 10px; }
-        .profile-edit .form-group label { font-size: 12px; }
-        .profile-edit .form-group input { font-size: 13px; padding: 8px 12px; }
-        
-        /* ==========================================
-           SETTINGS
-           ========================================== */
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 600px; }
-        .settings-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 14px 16px;
-        }
-        .settings-item .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-        .settings-item select, .settings-item input {
+        .trade-room .player-panel .form-group { margin-bottom: 8px; }
+        .trade-room .player-panel .form-group label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 2px; }
+        .trade-room .player-panel .form-group input {
             width: 100%;
-            padding: 6px 10px;
+            padding: 8px 12px;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             color: var(--text-primary);
             font-size: 13px;
         }
-        .settings-item select:focus, .settings-item input:focus { outline: none; border-color: var(--primary); }
+        .trade-room .player-panel .form-group input:focus { outline: none; border-color: var(--primary); }
+        .trade-room .reveal-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .trade-room .waiting-notice {
+            text-align: center;
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: var(--radius-sm);
+        }
+        .trade-room .waiting-notice p { color: var(--warning); font-size: 13px; }
+        .trade-room .completed-notice {
+            text-align: center;
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: var(--radius-sm);
+        }
+        .trade-room .completed-notice p { color: var(--success); font-weight: 700; font-size: 18px; }
+        
+        /* ==========================================
+           PROFILE MODAL
+           ========================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow);
+        }
+        .modal .close {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal .close:hover { color: white; }
+        .modal h3 { margin-bottom: 16px; color: var(--primary); }
         
         /* ==========================================
            TOAST
@@ -507,21 +505,16 @@
            ========================================== */
         @media (max-width: 768px) {
             .app { padding: 12px 16px; }
-            .main-grid { grid-template-columns: 1fr; }
-            .side-menu { position: static; display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
-            .side-menu .menu-item { padding: 8px 14px; border-left: none; border-radius: 8px; width: auto; flex: 1; min-width: 80px; justify-content: center; }
-            .side-menu .menu-item.active { border-left: none; background: rgba(124, 58, 237, 0.15); }
-            .side-menu .divider { display: none; }
+            .stats { grid-template-columns: 1fr 1fr; }
             .trade-room .players { grid-template-columns: 1fr; }
             .auth-box { padding: 24px 20px; }
-            .settings-grid { grid-template-columns: 1fr; }
-            .stats { grid-template-columns: 1fr 1fr; }
-            .header { flex-direction: column; align-items: stretch; }
+            .header { flex-direction: column; align-items: stretch; gap: 10px; }
             .header-right { justify-content: space-between; }
+            .success-center h2 { font-size: 20px; }
         }
         @media (max-width: 480px) {
             .stats { grid-template-columns: 1fr; }
-            .success-center h2 { font-size: 20px; }
+            .trade-card .top { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -530,17 +523,35 @@
     <!-- TOAST -->
     <div id="toast" class="toast"></div>
     
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal">
+            <button class="close" onclick="closeProfileModal()">✕</button>
+            <h3>👤 Profil Düzenle</h3>
+            <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">
+                <div class="avatar" id="modalAvatar" style="width:80px;height:80px;font-size:32px;margin-bottom:8px;">?</div>
+                <button class="btn btn-outline btn-sm" onclick="changeAvatar()">📷 Fotoğraf Değiştir</button>
+            </div>
+            <div class="form-group">
+                <label>Kullanıcı Adı</label>
+                <input type="text" id="editDisplayName" placeholder="Yeni kullanıcı adı" />
+            </div>
+            <button class="btn btn-primary btn-block" onclick="updateProfile()">💾 Kaydet</button>
+            <button class="btn btn-danger btn-block" style="margin-top:8px;" onclick="logout();closeProfileModal();">🚪 Çıkış Yap</button>
+        </div>
+    </div>
+    
     <!-- APP -->
     <div class="app">
         
         <!-- HEADER -->
         <header class="header">
             <div class="logo" onclick="navigateTo('dashboard')">
-                <span>◈</span>
+                <span class="logo-icon">◈</span>
                 <span class="logo-text">Valo<span style="color:var(--primary);">Trade</span></span>
             </div>
             <div class="header-right">
-                <div id="userBadge" class="user-badge">
+                <div id="userBadge" class="user-badge" onclick="openProfileModal()">
                     <span class="avatar" id="userAvatar">?</span>
                     <span id="userNameDisplay">Kullanıcı</span>
                 </div>
@@ -598,126 +609,42 @@
                 <p>Güvenli ve hızlı takas deneyimi. <span id="successCount">0</span> başarılı takas tamamlandı.</p>
             </div>
             
-            <!-- MAIN GRID -->
-            <div class="main-grid">
+            <!-- CONTENT -->
+            <div class="content">
                 
-                <!-- SIDE MENU -->
-                <div class="side-menu">
-                    <button class="menu-item active" data-page="pageTrades" onclick="switchPage('pageTrades')">
-                        <span class="icon">📋</span> Takaslarım
-                    </button>
-                    <button class="menu-item" data-page="pageNewTrade" onclick="switchPage('pageNewTrade')">
-                        <span class="icon">➕</span> Yeni Takas
-                    </button>
-                    <button class="menu-item" data-page="pageProfile" onclick="switchPage('pageProfile')">
-                        <span class="icon">👤</span> Profil
-                    </button>
-                    <button class="menu-item" data-page="pageSettings" onclick="switchPage('pageSettings')">
-                        <span class="icon">⚙️</span> Ayarlar
-                    </button>
-                    <div class="divider"></div>
-                    <button class="menu-item" onclick="logout()" style="color:var(--danger);">
-                        <span class="icon">🚪</span> Çıkış
-                    </button>
+                <!-- PAGE: TRADES -->
+                <div id="pageTrades" class="page active">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                        <h3 style="color:var(--primary); font-weight:700;">📋 Takaslarım</h3>
+                        <button class="btn btn-primary" onclick="showNewTrade()">➕ Yeni Takas</button>
+                    </div>
+                    <div id="tradeList" class="trade-list"></div>
                 </div>
                 
-                <!-- CONTENT -->
-                <div class="content">
-                    
-                    <!-- PAGE: TRADES -->
-                    <div id="pageTrades" class="page active">
-                        <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">📋 Takaslarım</h3>
-                        <div id="tradeList" class="trade-list"></div>
-                    </div>
-                    
-                    <!-- PAGE: NEW TRADE -->
-                    <div id="pageNewTrade" class="page">
+                <!-- PAGE: NEW TRADE -->
+                <div id="pageNewTrade" class="page" style="display:none;">
+                    <button class="btn btn-outline btn-sm" onclick="showTrades()" style="margin-bottom:16px;">← Geri</button>
+                    <div class="new-trade-box">
                         <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">➕ Yeni Takas Oluştur</h3>
-                        <div style="max-width:500px;">
-                            <div class="form-group">
-                                <label>Takas Başlığı</label>
-                                <input type="text" id="tradeTitle" placeholder="Örn: Vandal + Phantom takası" />
-                            </div>
-                            <div class="form-group">
-                                <label>Açıklama</label>
-                                <input type="text" id="tradeDesc" placeholder="Takas hakkında kısa bilgi" />
-                            </div>
-                            <button class="btn btn-primary btn-block" onclick="createTrade()">🚀 Takas Oluştur</button>
+                        <div class="form-group">
+                            <label>Takas Başlığı</label>
+                            <input type="text" id="tradeTitle" placeholder="Örn: Vandal + Phantom takası" />
                         </div>
-                    </div>
-                    
-                    <!-- PAGE: PROFILE -->
-                    <div id="pageProfile" class="page">
-                        <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">👤 Profilim</h3>
-                        <div class="profile-card">
-                            <div class="profile-header">
-                                <div class="avatar-lg" id="profileAvatar">?</div>
-                                <div class="info">
-                                    <h3 id="profileName">Kullanıcı</h3>
-                                    <p id="profileEmail">email@example.com</p>
-                                </div>
-                            </div>
-                            <div class="profile-detail">
-                                <p><strong>Kayıt:</strong> <span id="profileDate">-</span></p>
-                                <p><strong>Toplam Takas:</strong> <span id="profileTrades">0</span></p>
-                                <p><strong>Tamamlanan:</strong> <span id="profileCompleted">0</span></p>
-                            </div>
-                            <div class="profile-edit">
-                                <h4 style="color:var(--text-secondary); font-size:13px; margin-bottom:8px;">✏️ Profil Düzenle</h4>
-                                <div class="form-group">
-                                    <label>Kullanıcı Adı</label>
-                                    <input type="text" id="editDisplayName" placeholder="Yeni kullanıcı adı" />
-                                </div>
-                                <button class="btn btn-primary" onclick="updateProfile()">💾 Kaydet</button>
-                            </div>
+                        <div class="form-group">
+                            <label>Açıklama</label>
+                            <input type="text" id="tradeDesc" placeholder="Takas hakkında kısa bilgi" />
                         </div>
+                        <button class="btn btn-primary btn-block" onclick="createTrade()">🚀 Takas Oluştur</button>
                     </div>
-                    
-                    <!-- PAGE: SETTINGS -->
-                    <div id="pageSettings" class="page">
-                        <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">⚙️ Ayarlar</h3>
-                        <div class="settings-grid">
-                            <div class="settings-item">
-                                <div class="label">Tema</div>
-                                <select id="themeSelect" onchange="changeTheme()">
-                                    <option value="dark">Koyu</option>
-                                    <option value="light">Açık</option>
-                                    <option value="purple">Mor</option>
-                                </select>
-                            </div>
-                            <div class="settings-item">
-                                <div class="label">Dil</div>
-                                <select id="langSelect" onchange="changeLang()">
-                                    <option value="tr">Türkçe</option>
-                                    <option value="en">English</option>
-                                </select>
-                            </div>
-                            <div class="settings-item">
-                                <div class="label">Bildirimler</div>
-                                <select id="notifSelect" onchange="changeNotif()">
-                                    <option value="on">Açık</option>
-                                    <option value="off">Kapalı</option>
-                                </select>
-                            </div>
-                            <div class="settings-item">
-                                <div class="label">Ses</div>
-                                <select id="soundSelect" onchange="changeSound()">
-                                    <option value="on">Açık</option>
-                                    <option value="off">Kapalı</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button class="btn btn-outline" style="margin-top:14px;" onclick="resetSettings()">🔄 Sıfırla</button>
-                    </div>
-                    
                 </div>
+                
+                <!-- PAGE: TRADE ROOM -->
+                <div id="pageTradeRoom" class="page" style="display:none;">
+                    <button class="btn btn-outline btn-sm" onclick="closeTradeRoom()" style="margin-bottom:16px;">← Geri</button>
+                    <div id="tradeRoomContainer"></div>
+                </div>
+                
             </div>
-        </div>
-        
-        <!-- FOOTER -->
-        <div class="footer" style="margin-top:24px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--text-muted);">
-            <span>© 2026 <strong style="color:var(--primary);">ValoTrade</strong> — Güvenli takas</span>
-            <span>v3.0</span>
         </div>
         
     </div>
@@ -747,11 +674,10 @@
         // STATE
         // ==========================================
         let currentUser = null;
-        let trades = [];
+        let myTrades = [];
         let currentRoomId = null;
         let unsubscribeRoom = null;
         let isLoginMode = true;
-        let myTrades = [];
         
         // ==========================================
         // DOM REFS
@@ -804,6 +730,7 @@
                         updateUI(currentUser);
                         showDashboard();
                         showToast('Hoş geldin!', 'success');
+                        loadTrades();
                     })
                     .catch(e => showToast('Hata: ' + e.message, 'error'));
             } else {
@@ -849,6 +776,7 @@
                     updateUI(user);
                     showDashboard();
                     showToast('Google ile giriş başarılı!', 'success');
+                    loadTrades();
                 })
                 .catch(e => showToast('Hata: ' + e.message, 'error'));
         }
@@ -891,12 +819,15 @@
             if (user) {
                 userBadge.classList.add('show');
                 authBtn.textContent = '🚪 Çıkış';
-                userNameDisplay.textContent = user.displayName || user.email;
-                userAvatar.textContent = (user.displayName || 'K')[0].toUpperCase();
-                document.getElementById('profileName').textContent = user.displayName || user.email;
+                const displayName = user.displayName || user.email;
+                userNameDisplay.textContent = displayName;
+                userAvatar.textContent = displayName[0].toUpperCase();
+                
+                // Update modal avatar
+                document.getElementById('modalAvatar').textContent = displayName[0].toUpperCase();
+                document.getElementById('editDisplayName').value = displayName;
+                document.getElementById('profileName').textContent = displayName;
                 document.getElementById('profileEmail').textContent = user.email;
-                document.getElementById('profileAvatar').textContent = (user.displayName || 'K')[0].toUpperCase();
-                document.getElementById('editDisplayName').value = user.displayName || '';
             } else {
                 userBadge.classList.remove('show');
                 authBtn.textContent = '🔐 Giriş';
@@ -913,17 +844,79 @@
             dashboard.classList.remove('active');
         }
         
-        function switchPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
-            if (pageId === 'pageTrades') renderTrades();
-            if (pageId === 'pageProfile') renderProfile();
+        function showTrades() {
+            document.getElementById('pageNewTrade').style.display = 'none';
+            document.getElementById('pageTradeRoom').style.display = 'none';
+            document.getElementById('pageTrades').style.display = 'block';
+            renderTrades();
+        }
+        
+        function showNewTrade() {
+            document.getElementById('pageTrades').style.display = 'none';
+            document.getElementById('pageTradeRoom').style.display = 'none';
+            document.getElementById('pageNewTrade').style.display = 'block';
+        }
+        
+        function showTradeRoom() {
+            document.getElementById('pageTrades').style.display = 'none';
+            document.getElementById('pageNewTrade').style.display = 'none';
+            document.getElementById('pageTradeRoom').style.display = 'block';
+        }
+        
+        function closeTradeRoom() {
+            if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
+            currentRoomId = null;
+            showTrades();
         }
         
         function navigateTo(section) {
             if (section === 'dashboard' && currentUser) showDashboard();
+        }
+        
+        // ==========================================
+        // PROFILE MODAL
+        // ==========================================
+        function openProfileModal() {
+            if (!currentUser) return;
+            document.getElementById('profileModal').classList.add('active');
+        }
+        
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+        
+        function changeAvatar() {
+            // Emoji avatar değiştirme (basit demo)
+            const emojis = ['😀', '😎', '🔥', '⚡', '🎯', '🏆', '💎', '🚀'];
+            const current = document.getElementById('modalAvatar').textContent;
+            let newEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            while (newEmoji === current && emojis.length > 1) {
+                newEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            }
+            document.getElementById('modalAvatar').textContent = newEmoji;
+            userAvatar.textContent = newEmoji;
+            showToast('Avatar güncellendi!', 'success');
+        }
+        
+        function updateProfile() {
+            if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
+            
+            const newName = document.getElementById('editDisplayName').value.trim();
+            if (!newName) { showToast('İsim boş olamaz!', 'error'); return; }
+            
+            db.collection('users').where('displayName', '==', newName).get()
+                .then(snap => {
+                    if (!snap.empty && snap.docs[0].id !== currentUser.uid) {
+                        showToast('Bu isim zaten kullanılıyor!', 'error');
+                        return;
+                    }
+                    currentUser.updateProfile({ displayName: newName });
+                    db.collection('users').doc(currentUser.uid).update({ displayName: newName });
+                    updateUI(currentUser);
+                    showToast('Profil güncellendi!', 'success');
+                    closeProfileModal();
+                })
+                .catch(e => showToast('Hata: ' + e.message, 'error'));
         }
         
         // ==========================================
@@ -961,7 +954,6 @@
                     snap.forEach(d => myTrades.push({ id: d.id, ...d.data() }));
                     renderTrades();
                     renderStats();
-                    renderProfile();
                     updateSuccessCount();
                 });
         }
@@ -999,13 +991,13 @@
             
             db.collection('trades').doc(roomId).set(tradeData)
                 .then(() => {
-                    showToast('Takas oluşturuldu! Link: ' + roomId, 'success');
+                    showToast('Takas oluşturuldu!', 'success');
                     document.getElementById('tradeTitle').value = '';
                     document.getElementById('tradeDesc').value = '';
-                    currentRoomId = roomId;
-                    switchPage('pageTrades');
+                    showTrades();
                     renderTrades();
-                    // Copy link
+                    
+                    // Link kopyala
                     const link = window.location.origin + window.location.pathname + '?trade=' + roomId;
                     navigator.clipboard.writeText(link).then(() => {
                         showToast('📋 Takas linki kopyalandı! Paylaşabilirsin.', 'success');
@@ -1018,6 +1010,7 @@
         
         function joinTrade(roomId) {
             if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
+            if (currentRoomId) { closeTradeRoom(); }
             
             db.collection('trades').doc(roomId).get()
                 .then(doc => {
@@ -1026,8 +1019,8 @@
                     if (data.completed) { showToast('Bu takas tamamlanmış!', 'error'); return; }
                     if (data.participants.includes(currentUser.uid)) {
                         currentRoomId = roomId;
-                        showToast('Zaten bu takastasın!', 'info');
-                        renderTradeRoom();
+                        showTradeRoom();
+                        renderTradeRoom(data);
                         listenTrade(roomId);
                         return;
                     }
@@ -1047,10 +1040,9 @@
                     db.collection('trades').doc(roomId).update(updateData)
                         .then(() => {
                             currentRoomId = roomId;
+                            showTradeRoom();
                             showToast('Takasa katıldın!', 'success');
-                            renderTradeRoom();
                             listenTrade(roomId);
-                            switchPage('pageTrades');
                         })
                         .catch(e => showToast('Hata: ' + e.message, 'error'));
                 })
@@ -1071,7 +1063,6 @@
         
         function renderTrades() {
             const container = document.getElementById('tradeList');
-            
             if (!currentUser) { container.innerHTML = '<p style="color:var(--text-muted);">Giriş yap.</p>'; return; }
             
             // Check URL for trade param
@@ -1079,6 +1070,8 @@
             const tradeId = params.get('trade');
             if (tradeId && !currentRoomId) {
                 joinTrade(tradeId);
+                // Remove param
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
             
             const myList = myTrades.filter(t => t.participants?.includes(currentUser.uid));
@@ -1088,7 +1081,7 @@
                     <div style="text-align:center; padding:40px; color:var(--text-muted);">
                         <p style="font-size:36px;">📋</p>
                         <p>Henüz takasın yok.</p>
-                        <p style="font-size:13px;">Yeni takas oluştur veya bir link ile katıl.</p>
+                        <p style="font-size:13px;">"Yeni Takas" butonu ile başlayabilirsin.</p>
                     </div>
                 `;
                 return;
@@ -1114,8 +1107,8 @@
                     </div>
                     ${t.desc ? `<div style="margin-top:8px; font-size:13px; color:var(--text-secondary);">${t.desc}</div>` : ''}
                     <div class="bottom">
-                        <span style="font-size:12px; color:var(--text-muted);">👥 ${t.participants?.length || 0}/2 katılımcı</span>
-                        ${t.completedAt ? `<span style="font-size:12px; color:var(--success);">✅ ${new Date(t.completedAt).toLocaleDateString('tr-TR')}</span>` : ''}
+                        <span>👥 ${t.participants?.length || 0}/2 katılımcı</span>
+                        ${t.completedAt ? `<span>✅ ${new Date(t.completedAt).toLocaleDateString('tr-TR')}</span>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -1123,32 +1116,29 @@
         
         function openTradeRoom(roomId) {
             currentRoomId = roomId;
-            renderTradeRoom();
-            listenTrade(roomId);
-            switchPage('pageTrades');
-            document.getElementById('pageTrades').innerHTML = `
-                <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">📂 Takas Odası</h3>
-                <div id="tradeRoomContainer"></div>
-            `;
-            renderTradeRoom();
+            showTradeRoom();
+            
+            db.collection('trades').doc(roomId).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        renderTradeRoom(doc.data());
+                        listenTrade(roomId);
+                    }
+                })
+                .catch(e => showToast('Hata: ' + e.message, 'error'));
         }
         
         function renderTradeRoom(roomData) {
             const container = document.getElementById('tradeRoomContainer');
             if (!container) return;
             
-            if (!currentRoomId) {
-                container.innerHTML = `<p style="color:var(--text-muted);">Takas odası açılmadı.</p>`;
-                return;
-            }
-            
             if (!roomData) {
-                container.innerHTML = `<div style="text-align:center; padding:20px;">Yükleniyor...</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Yükleniyor...</div>`;
                 return;
             }
             
             const participants = Object.values(roomData.participantsData || {});
-            const isCreator = roomData.createdBy === currentUser.uid;
+            const isCreator = roomData.createdBy === currentUser?.uid;
             const allReady = participants.length === 2 && participants.every(p => p.ready);
             const allRevealed = participants.length === 2 && participants.every(p => p.revealed);
             
@@ -1167,34 +1157,34 @@
                     </div>
                     
                     <div class="players">
-                        ${participants.map((p, index) => `
-                            <div class="player-panel ${p.uid === currentUser.uid ? 'active' : ''}" style="${p.uid === currentUser.uid ? 'border-color:var(--primary);' : ''}">
-                                <div class="header">
-                                    <h4>${p.displayName} ${p.uid === currentUser.uid ? '(Sen)' : ''}</h4>
+                        ${participants.map(p => `
+                            <div class="player-panel" style="${p.uid === currentUser?.uid ? 'border-color:var(--primary);' : ''}">
+                                <div class="panel-header">
+                                    <h4>${p.displayName} ${p.uid === currentUser?.uid ? '(Sen)' : ''}</h4>
                                     <span class="ready-badge ${p.ready ? 'ready-yes' : 'ready-no'}">${p.ready ? '✅ Hazır' : '⏳ Bekliyor'}</span>
                                 </div>
-                                ${p.uid === currentUser.uid ? `
-                                    <div style="margin-bottom:12px;">
-                                        <div class="form-group" style="margin-bottom:8px;">
-                                            <label style="font-size:11px;">Valorant Kullanıcı Adı</label>
-                                            <input type="text" id="tradeUsername" placeholder="Kullanıcı adı..." style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:white;font-size:13px;" />
+                                ${p.uid === currentUser?.uid ? `
+                                    <div>
+                                        <div class="form-group">
+                                            <label>Valorant Kullanıcı Adı</label>
+                                            <input type="text" id="tradeUsername" placeholder="Kullanıcı adı..." />
                                         </div>
-                                        <div class="form-group" style="margin-bottom:8px;">
-                                            <label style="font-size:11px;">Valorant Şifre</label>
-                                            <input type="password" id="tradePassword" placeholder="••••••••" style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:white;font-size:13px;" />
+                                        <div class="form-group">
+                                            <label>Valorant Şifre</label>
+                                            <input type="password" id="tradePassword" placeholder="••••••••" />
                                         </div>
-                                        <div class="form-group" style="margin-bottom:8px;">
-                                            <label style="font-size:11px;">Skin Listesi</label>
-                                            <input type="text" id="tradeSkins" placeholder="Vandal, Phantom..." style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;color:white;font-size:13px;" />
+                                        <div class="form-group">
+                                            <label>Skin Listesi</label>
+                                            <input type="text" id="tradeSkins" placeholder="Vandal, Phantom..." />
                                         </div>
                                         <button class="btn btn-success btn-block" onclick="submitTradeData()">✅ Hazırım</button>
                                     </div>
                                 ` : `
                                     <div class="data-display">
                                         ${p.ready ? `
-                                            <p><span class="label">Kullanıcı:</span> <span class="value hidden">🔒 ${p.revealed ? (decryptData(p.data?.username)?.username || 'Gizli') : '🔒 Gizli'}</span></p>
-                                            <p><span class="label">Skinler:</span> <span class="value hidden">${p.revealed ? (decryptData(p.data?.skins) || 'Gizli') : '🔒 Gizli'}</span></p>
-                                            <p><span class="label">Şifre:</span> <span class="value hidden">${p.revealed ? '🔓 Gösterildi' : '🔒 Gizli'}</span></p>
+                                            <p><span class="label">Kullanıcı:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? (decryptData(p.data?.username)?.username || 'Gizli') : '🔒 Gizli'}</span></p>
+                                            <p><span class="label">Skinler:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? (decryptData(p.data?.skins) || 'Gizli') : '🔒 Gizli'}</span></p>
+                                            <p><span class="label">Şifre:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? '🔓 Gösterildi' : '🔒 Gizli'}</span></p>
                                             ${p.revealed ? `<p style="color:var(--success);font-size:12px;margin-top:4px;">✅ Bilgiler gösterildi</p>` : ''}
                                         ` : `
                                             <p style="color:var(--text-muted);">⏳ Bilgilerini bekliyor...</p>
@@ -1219,15 +1209,15 @@
                     ` : ''}
                     
                     ${roomData.completed ? `
-                        <div style="text-align:center;margin-top:16px;padding:16px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:var(--radius-sm);">
-                            <p style="color:var(--success);font-weight:700;font-size:18px;">✅ Takas Tamamlandı!</p>
+                        <div class="completed-notice">
+                            <p>✅ Takas Tamamlandı!</p>
                             <p style="color:var(--text-secondary);font-size:13px;">${new Date(roomData.completedAt).toLocaleString('tr-TR')}</p>
                         </div>
                     ` : ''}
                     
                     ${participants.length < 2 ? `
-                        <div style="text-align:center;margin-top:16px;padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius-sm);">
-                            <p style="color:var(--warning);font-size:13px;">⏳ Diğer katılımcı bekleniyor...</p>
+                        <div class="waiting-notice">
+                            <p>⏳ Diğer katılımcı bekleniyor...</p>
                             <button class="btn btn-outline btn-sm" onclick="copyTradeLink('${roomData.roomId}')">🔗 Linki Kopyala</button>
                         </div>
                     ` : ''}
@@ -1279,7 +1269,6 @@
                         return;
                     }
                     
-                    // Reveal for both
                     const updateData = {};
                     Object.keys(data.participantsData || {}).forEach(uid => {
                         updateData[`participantsData.${uid}.revealed`] = true;
@@ -1297,7 +1286,6 @@
                                 completed: firebase.firestore.FieldValue.increment(1)
                             }).catch(() => {});
                             
-                            // Update creator stats
                             if (data.createdBy) {
                                 db.collection('users').doc(data.createdBy).update({
                                     completed: firebase.firestore.FieldValue.increment(1)
@@ -1330,7 +1318,7 @@
                     }
                     currentRoomId = null;
                     showToast('Takastan çıkıldı.', 'info');
-                    renderTrades();
+                    showTrades();
                 })
                 .catch(e => showToast('Hata: ' + e.message, 'error'));
         }
@@ -1345,7 +1333,7 @@
         }
         
         // ==========================================
-        // STATS & PROFILE
+        // STATS & SUCCESS
         // ==========================================
         function renderStats() {
             const total = myTrades.filter(t => t.participants?.includes(currentUser?.uid)).length;
@@ -1357,101 +1345,26 @@
             document.getElementById('statCompleted').textContent = completed;
         }
         
-        function renderProfile() {
-            if (!currentUser) return;
-            const total = myTrades.filter(t => t.participants?.includes(currentUser.uid)).length;
-            const completed = myTrades.filter(t => t.completed).length;
-            document.getElementById('profileTrades').textContent = total;
-            document.getElementById('profileCompleted').textContent = completed;
-            document.getElementById('profileDate').textContent = currentUser.metadata?.creationTime ?
-                new Date(currentUser.metadata.creationTime).toLocaleDateString('tr-TR') : '-';
-        }
-        
         function updateSuccessCount() {
             const count = myTrades.filter(t => t.completed).length;
             if (successCount) successCount.textContent = count;
         }
         
-        function updateProfile() {
-            if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
-            
-            const newName = document.getElementById('editDisplayName').value.trim();
-            if (!newName) { showToast('İsim boş olamaz!', 'error'); return; }
-            
-            db.collection('users').where('displayName', '==', newName).get()
-                .then(snap => {
-                    if (!snap.empty && snap.docs[0].id !== currentUser.uid) {
-                        showToast('Bu isim zaten kullanılıyor!', 'error');
-                        return;
-                    }
-                    currentUser.updateProfile({ displayName: newName });
-                    db.collection('users').doc(currentUser.uid).update({ displayName: newName });
-                    updateUI(currentUser);
-                    showToast('Profil güncellendi!', 'success');
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        // ==========================================
-        // SETTINGS
-        // ==========================================
-        function changeTheme() {
-            const val = document.getElementById('themeSelect').value;
-            const root = document.documentElement;
-            if (val === 'light') {
-                root.style.setProperty('--bg-primary', '#f0edf5');
-                root.style.setProperty('--bg-secondary', '#e8e4f0');
-                root.style.setProperty('--bg-card', '#d8d0e8');
-                root.style.setProperty('--bg-input', '#c8c0d8');
-                root.style.setProperty('--text-primary', '#1a1a2e');
-                root.style.setProperty('--text-secondary', '#444466');
-                root.style.setProperty('--border-color', '#b0a8c8');
-            } else if (val === 'purple') {
-                root.style.setProperty('--bg-primary', '#0a0015');
-                root.style.setProperty('--bg-secondary', '#15002a');
-                root.style.setProperty('--bg-card', '#220040');
-                root.style.setProperty('--bg-input', '#1a0030');
-                root.style.setProperty('--border-color', '#440077');
-                root.style.setProperty('--text-primary', '#ffffff');
-                root.style.setProperty('--text-secondary', '#b8a0d8');
-            } else {
-                root.style.setProperty('--bg-primary', '#0a0a12');
-                root.style.setProperty('--bg-secondary', '#0f0f1f');
-                root.style.setProperty('--bg-card', '#16162e');
-                root.style.setProperty('--bg-input', '#0d0d1a');
-                root.style.setProperty('--border-color', '#2a2a4a');
-                root.style.setProperty('--text-primary', '#ffffff');
-                root.style.setProperty('--text-secondary', '#94a3b8');
-            }
-            showToast('Tema değiştirildi', 'info');
-        }
-        
-        function changeLang() { showToast('🌐 Dil değiştirildi', 'info'); }
-        function changeNotif() { showToast('🔔 Bildirimler güncellendi', 'info'); }
-        function changeSound() { showToast('🔊 Ses ayarı güncellendi', 'info'); }
-        function resetSettings() {
-            document.getElementById('themeSelect').value = 'dark';
-            document.getElementById('langSelect').value = 'tr';
-            document.getElementById('notifSelect').value = 'on';
-            document.getElementById('soundSelect').value = 'on';
-            changeTheme();
-            showToast('🔄 Ayarlar sıfırlandı', 'info');
-        }
-        
         // ==========================================
         // INIT
         // ==========================================
-        console.log('🚀 ValoTrade v3.0');
+        console.log('🚀 ValoTrade v4.0 - Profesyonel Tasarım');
         
-        // Check URL for trade param on load
+        // Auto join trade from URL
         const params = new URLSearchParams(window.location.search);
         const tradeId = params.get('trade');
-        if (tradeId && currentUser) {
-            setTimeout(() => joinTrade(tradeId), 1000);
+        if (tradeId) {
+            setTimeout(() => {
+                if (currentUser) {
+                    joinTrade(tradeId);
+                }
+            }, 1500);
         }
-        
-        // Auto auth state check
-        auth.onAuthStateChanged(() => {});
     </script>
 </body>
 </html>
