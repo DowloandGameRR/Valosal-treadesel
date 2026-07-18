@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ValoTrade - Güvenli Hesap Takas</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+    
+    <!-- CryptoJS for AES-256 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    
+    <style>
+        /* ============================================
+           CSS VARIABLES & RESET
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 4px;
+        }
+        
+        /* ============================================
+           LAYOUT
+           ============================================ */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            min-height: 100vh;
+        }
+        
+        /* ============================================
+           HEADER / NAV
+           ============================================ */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .logo-text {
+            font-size: var(--font-size-2xl);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--color-bg-card);
+            padding: 8px 16px 8px 12px;
+            border-radius: 50px;
+            border: 1px solid var(--color-border);
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            box-shadow: 0 4px 20px var(--color-primary-glow);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--color-primary-glow);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+        }
+        
+        .btn-outline:hover {
+            border-color: var(--color-primary);
+            color: var(--color-text-primary);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00c853, #00b248);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff1744, #d50000);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: var(--font-size-xs);
+        }
+        
+        /* ============================================
+           AUTH SCREEN
+           ============================================ */
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            padding: 40px 20px;
+            animation: fadeUp 0.5s ease;
+        }
+        
+        .auth-box {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 24px;
+            padding: 48px 56px;
+            max-width: 440px;
+            width: 100%;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-card);
+        }
+        
+        .auth-box h2 {
+            font-size: var(--font-size-3xl);
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .auth-box .sub {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            color: var(--color-text-primary);
+            font-size: var(--font-size-base);
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-glow);
+        }
+        
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .auth-divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .auth-divider span {
+            color: var(--color-text-muted);
+            font-size: var(--font-size-xs);
+        }
+        
+        .btn-google {
+            background: white;
+            color: #222;
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        
+        .btn-google:hover {
+            background: #f0f0f0;
+        }
+        
+        .auth-toggle {
+            color: var(--color-primary);
+            cursor: pointer;
+            font-weight: 600;
+            background: none;
+            border: none;
+            font-size: var(--font-size-sm);
+        }
+        
+        .auth-toggle:hover {
+            text-decoration: underline;
+        }
+        
+        /* ============================================
+           DASHBOARD
+           ============================================ */
+        .dashboard {
+            display: none;
+            animation: fadeUp 0.4s ease;
+        }
+        
+        .dashboard.active {
+            display: block;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        
+        .stat-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 18px 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card .number {
+            font-size: var(--font-size-3xl);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card .label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* ============================================
+           TRADE ROOM
+           ============================================ */
+        .trade-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .trade-panel {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .trade-panel.active {
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .trade-panel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .trade-panel .panel-header h4 {
+            font-size: var(--font-size-lg);
+        }
+        
+        .trade-panel .panel-header .status {
+            font-size: var(--font-size-xs);
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
+        
+        .status-waiting {
+            background: rgba(255, 193, 7, 0.12);
+            color: #ffc107;
+        }
+        
+        .status-ready {
+            background: rgba(0, 200, 83, 0.12);
+            color: #00c853;
+        }
+        
+        .status-completed {
+            background: rgba(0, 229, 255, 0.12);
+            color: var(--color-accent);
+        }
+        
+        .secure-input {
+            position: relative;
+        }
+        
+        .secure-input .lock-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+        }
+        
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 229, 255, 0.04);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 229, 255, 0.06);
+        }
+        
+        /* Chat */
+        .chat-container {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+            max-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 200px;
+            margin-bottom: 12px;
+            padding-right: 8px;
+        }
+        
+        .chat-message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.2s ease;
+        }
+        
+        .chat-message .sender {
+            font-weight: 600;
+            color: var(--color-primary);
+            font-size: var(--font-size-xs);
+        }
+        
+        .chat-message .text {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            word-break: break-word;
+        }
+        
+        .chat-message .time {
+            color: var(--color-text-muted);
+            font-size: var(--font-size-xs);
+            margin-left: auto;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            color: var(--color-text-primary);
+            font-size: var(--font-size-sm);
+        }
+        
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .chat-input button {
+            padding: 10px 18px;
+        }
+        
+        /* ============================================
+           MARKETPLACE
+           ============================================ */
+        .market-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .market-toolbar input,
+        .market-toolbar select {
+            padding: 10px 16px;
+            background: var(--color-bg-input);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            color: var(--color-text-primary);
+            font-size: var(--font-size-sm);
+        }
+        
+        .market-toolbar input:focus,
+        .market-toolbar select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+        }
+        
+        .account-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .account-card:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .account-card .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 50px;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        
+        .badge-verified {
+            background: rgba(0, 200, 83, 0.12);
+            color: #00c853;
+            border: 1px solid rgba(0, 200, 83, 0.15);
+        }
+        
+        .account-card .name {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            margin: 6px 0 2px;
+        }
+        
+        .account-card .skins {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 8px 0 12px;
+        }
+        
+        .account-card .skins span {
+            background: rgba(255, 107, 0, 0.08);
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: var(--font-size-xs);
+            color: var(--color-primary);
+            border: 1px solid rgba(255, 107, 0, 0.1);
+        }
+        
+        .account-card .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        /* ============================================
+           TABS
+           ============================================ */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--color-bg-card);
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            border: 1px solid var(--color-border);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px 18px;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        
+        .tab-btn.active {
+            background: var(--color-primary);
+            color: white;
+            box-shadow: 0 4px 20px var(--color-primary-glow);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            color: var(--color-text-primary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeUp 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .footer .copy {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-muted);
+        }
+        
+        .footer .copy strong {
+            color: var(--color-primary);
+        }
+        
+        /* ============================================
+           SECURITY BANNER
+           ============================================ */
+        .security-banner {
+            background: rgba(0, 229, 255, 0.04);
+            border: 1px solid rgba(0, 229, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .security-banner .icon {
+            font-size: 20px;
+        }
+        
+        .security-banner .text {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .security-banner .text strong {
+            color: var(--color-accent);
+        }
+        
+        /* ============================================
+           TOAST
+           ============================================ */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 14px;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-card);
+            display: none;
+            z-index: 1000;
+            max-width: 400px;
+            font-size: var(--font-size-sm);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .toast.show {
+            display: block;
+        }
+        
+        .toast.success {
+            border-color: #00c853;
+        }
+        
+        .toast.error {
+            border-color: #ff1744;
+        }
+        
+        .toast.info {
+            border-color: var(--color-accent);
+        }
+        
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 12px 16px;
+            }
+            
+            .auth-box {
+                padding: 28px 20px;
+            }
+            
+            .trade-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .market-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-actions {
+                justify-content: space-between;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                flex: none;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .security-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- ========================================== -->
+    <!-- TOAST -->
+    <!-- ========================================== -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- ========================================== -->
+    <!-- APP CONTAINER -->
+    <!-- ========================================== -->
+    <div class="app-container">
+        
+        <!-- ===== NAVBAR ===== -->
+        <nav class="navbar">
+            <div class="logo" onclick="navigateTo('dashboard')">
+                <img src="logo.png" alt="ValoTrade" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'font-size:28px;font-weight:900;color:var(--color-primary);\'>◈</span><span class=\'logo-text\'>Valo<span style=\'color:var(--color-primary);\'>Trade</span></span>';" />
+                <span class="logo-text">Valo<span style="color:var(--color-primary);">Trade</span></span>
+            </div>
+            <div class="nav-actions">
+                <div id="userBadge" class="user-badge" style="display:none;">
+                    <span class="user-avatar" id="userAvatar">?</span>
+                    <span id="userNameDisplay">Kullanıcı</span>
+                </div>
+                <button id="authBtn" class="btn btn-primary" onclick="handleAuth()">🔐 Giriş Yap</button>
+            </div>
+        </nav>
+        
+        <!-- ===== SECURITY BANNER ===== -->
+        <div class="security-banner" id="securityBanner">
+            <span class="icon">🔒</span>
+            <span class="text"><strong>AES-256</strong> ile şifreleniyor. Bilgileriniz güvende.</span>
+        </div>
+        
+        <!-- ===== AUTH SCREEN ===== -->
+        <div id="authScreen" class="auth-screen">
+            <div class="auth-box">
+                <h2 id="authTitle">Giriş Yap</h2>
+                <p class="sub" id="authSub">Hesabına giriş yaparak başla</p>
+                <div id="authForm">
+                    <div class="form-group">
+                        <label>E-posta Adresi</label>
+                        <input type="email" id="authEmail" placeholder="ornek@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre</label>
+                        <input type="password" id="authPassword" placeholder="••••••••" />
+                    </div>
+                    <div id="registerFields" style="display:none;">
+                        <div class="form-group">
+                            <label>Şifre Tekrar</label>
+                            <input type="password" id="authPassword2" placeholder="••••••••" />
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; justify-content:center;">
+                        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()">Giriş Yap</button>
+                        <button class="btn btn-outline" id="authToggleBtn" onclick="toggleAuthMode()">Kayıt Ol</button>
+                    </div>
+                    <div class="auth-divider"><hr /><span>veya</span><hr /></div>
+                    <button class="btn btn-google" onclick="loginWithGoogle()">
+                        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.97-5.97z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"/></svg>
+                        Google ile Giriş Yap
+                    </button>
+                    <div style="margin-top:16px; font-size:var(--font-size-xs); color:var(--color-text-muted);">
+                        <span id="authToggleText">Hesabın yok mu? <button class="auth-toggle" onclick="toggleAuthMode()">Kayıt Ol</button></span>
+                    </div>
+                </div>
+                <div id="emailVerificationNotice" style="display:none; margin-top:16px; padding:12px; background:rgba(255,193,7,0.08); border-radius:12px; border:1px solid rgba(255,193,7,0.15);">
+                    <p style="color:#ffc107; font-size:var(--font-size-sm);">📧 E-posta adresine gönderilen doğrulama linkine tıkla. Hesabını aktifleştir!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ===== DASHBOARD ===== -->
+        <div id="dashboard" class="dashboard">
+            
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card"><div class="number" id="statAccounts">0</div><div class="label">Doğrulanmış Hesap</div></div>
+                <div class="stat-card"><div class="number" id="statTrades">0</div><div class="label">Tamamlanan Takas</div></div>
+                <div class="stat-card"><div class="number" id="statOffers">0</div><div class="label">Aktif Teklif</div></div>
+                <div class="stat-card"><div class="number" id="statEscrow">0</div><div class="label">Emanet Bekleyen</div></div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tabMarket" onclick="switchTab('tabMarket')">🏪 Pazar Yeri</button>
+                <button class="tab-btn" data-tab="tabTrade" onclick="switchTab('tabTrade')">⚔️ Takas</button>
+                <button class="tab-btn" data-tab="tabProfile" onclick="switchTab('tabProfile')">👤 Profil</button>
+            </div>
+            
+            <!-- ===== TAB: MARKET ===== -->
+            <div id="tabMarket" class="tab-content active">
+                <div class="market-toolbar">
+                    <h3 style="color:var(--color-primary); font-weight:700;">🏪 Pazar Yeri</h3>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="searchMarket" placeholder="Hesap ara..." oninput="renderMarketplace()" />
+                        <select id="filterSkin" onchange="renderMarketplace()">
+                            <option value="">Tüm Skinler</option>
+                            <option value="Vandal">Vandal</option>
+                            <option value="Phantom">Phantom</option>
+                            <option value="Knife">Knife</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="marketplaceList" class="market-grid"></div>
+            </div>
+            
+            <!-- ===== TAB: TRADE ===== -->
+            <div id="tabTrade" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <h3 style="color:var(--color-primary); font-weight:700;">⚔️ Takas Odası</h3>
+                    <button class="btn btn-primary" onclick="createTradeRoom()">🚀 Yeni Takas Başlat</button>
+                </div>
+                
+                <!-- Trade Room Container -->
+                <div id="tradeRoomContainer">
+                    <div style="text-align:center; padding:40px; color:var(--color-text-muted);">
+                        <p style="font-size:48px;">⚔️</p>
+                        <p>Henüz aktif takas odası yok.</p>
+                        <p style="font-size:var(--font-size-sm);">"Yeni Takas Başlat" ile başlayın.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== TAB: PROFILE ===== -->
+            <div id="tabProfile" class="tab-content">
+                <h3 style="color:var(--color-primary); font-weight:700; margin-bottom:16px;">👤 Profilim</h3>
+                <div style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:16px; padding:24px; max-width:500px;">
+                    <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+                        <div class="user-avatar" style="width:56px; height:56px; font-size:24px;" id="profileAvatar">?</div>
+                        <div>
+                            <h4 style="color:white;" id="profileName">Kullanıcı</h4>
+                            <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm);" id="profileEmail">email@example.com</p>
+                        </div>
+                    </div>
+                    <div style="border-top:1px solid var(--color-border); padding-top:14px;">
+                        <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm);"><strong style="color:var(--color-primary);">Kayıt Tarihi:</strong> <span id="profileDate">-</span></p>
+                        <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm);"><strong style="color:var(--color-primary);">Hesap Sayısı:</strong> <span id="profileAccountCount">0</span></p>
+                        <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm);"><strong style="color:var(--color-primary);">Tamamlanan Takas:</strong> <span id="profileTrades">0</span></p>
+                    </div>
+                    <button class="btn btn-danger" style="margin-top:16px;" onclick="logout()">🚪 Çıkış Yap</button>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- ===== FOOTER ===== -->
+        <div class="footer">
+            <span class="copy">© 2026 <strong>ValoTrade</strong> — Güvenli hesap takas platformu.</span>
+        </div>
+        
+    </div>
+    
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================== -->
+    <script>
+        // ==========================================
+        // FIREBASE CONFIG
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2Wc0qiBY8tV_6VsPMm0RewzSXMT7f48s",
+            authDomain: "project-52b68460-83e4-4fcf-aa0.firebaseapp.com",
+            projectId: "project-52b68460-83e4-4fcf-aa0",
+            storageBucket: "project-52b68460-83e4-4fcf-aa0.firebasestorage.app",
+            messagingSenderId: "447150523512",
+            appId: "1:447150523512:web:077e53b627f63a86e0998d",
+            measurementId: "G-BXMHVDH7RD"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const analytics = firebase.analytics();
+        
+        // ==========================================
+        // STATE
+        // ==========================================
+        let currentUser = null;
+        let accounts = [];
+        let trades = [];
+        let offers = [];
+        let escrowCount = 0;
+        let currentRoomId = null;
+        let isLoginMode = true;
+        let unsubscribeRoom = null;
+        
+        // ==========================================
+        // DOM REFS
+        // ==========================================
+        const authScreen = document.getElementById('authScreen');
+        const dashboard = document.getElementById('dashboard');
+        const authBtn = document.getElementById('authBtn');
+        const userBadge = document.getElementById('userBadge');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+        const toast = document.getElementById('toast');
+        
+        // ==========================================
+        // AUTH FUNCTIONS
+        // ==========================================
+        function handleAuth() {
+            if (currentUser) {
+                logout();
+            } else {
+                authScreen.style.display = 'flex';
+                dashboard.classList.remove('active');
+            }
+        }
+        
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+            document.getElementById('authSub').textContent = isLoginMode ? 'Hesabına giriş yaparak başla' :
+                'Yeni hesap oluşturarak başla';
+            document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+            document.getElementById('authToggleBtn').textContent = isLoginMode ? 'Kayıt Ol' : 'Giriş Yap';
+            document.getElementById('registerFields').style.display = isLoginMode ? 'none' : 'block';
+            document.getElementById('authToggleText').innerHTML = isLoginMode ?
+                'Hesabın yok mu? <button class="auth-toggle" onclick="toggleAuthMode()">Kayıt Ol</button>' :
+                'Zaten hesabın var mı? <button class="auth-toggle" onclick="toggleAuthMode()">Giriş Yap</button>';
+        }
+        
+        function submitAuth() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const password2 = document.getElementById('authPassword2').value;
+            
+            if (!email || !password) {
+                showToast('Tüm alanları doldurun!', 'error');
+                return;
+            }
+            
+            if (isLoginMode) {
+                // Login
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        if (!user.emailVerified) {
+                            showToast('Lütfen e-postanı doğrula!', 'error');
+                            document.getElementById('emailVerificationNotice').style.display = 'block';
+                            auth.signOut();
+                            return;
+                        }
+                        currentUser = user;
+                        updateUI(user);
+                        showDashboard();
+                        showToast('Hoş geldin, ' + user.displayName || user.email + '!', 'success');
+                    })
+                    .catch((error) => {
+                        showToast('Hata: ' + error.message, 'error');
+                    });
+            } else {
+                // Register
+                if (password !== password2) {
+                    showToast('Şifreler eşleşmiyor!', 'error');
+                    return;
+                }
+                if (password.length < 6) {
+                    showToast('Şifre en az 6 karakter!', 'error');
+                    return;
+                }
+                
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        // Send email verification
+                        user.sendEmailVerification();
+                        // Set display name
+                        user.updateProfile({
+                            displayName: email.split('@')[0]
+                        });
+                        // Save to Firestore
+                        db.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            displayName: email.split('@')[0],
+                            createdAt: new Date().toISOString(),
+                            tradeCount: 0,
+                            reputation: 4.5
+                        });
+                        
+                        showToast('Kayıt başarılı! E-postanı doğrula.', 'success');
+                        document.getElementById('emailVerificationNotice').style.display = 'block';
+                        document.getElementById('authSubmitBtn').textContent = 'Giriş Yap';
+                        toggleAuthMode();
+                        auth.signOut();
+                    })
+                    .catch((error) => {
+                        showToast('Hata: ' + error.message, 'error');
+                    });
+            }
+        }
+        
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    // Check if user exists in Firestore
+                    db.collection('users').doc(user.uid).get().then((doc) => {
+                        if (!doc.exists) {
+                            db.collection('users').doc(user.uid).set({
+                                email: user.email,
+                                displayName: user.displayName || user.email.split('@')[0],
+                                photoURL: user.photoURL || '',
+                                createdAt: new Date().toISOString(),
+                                tradeCount: 0,
+                                reputation: 4.5
+                            });
+                        }
+                    });
+                    currentUser = user;
+                    updateUI(user);
+                    showDashboard();
+                    showToast('Google ile giriş başarılı!', 'success');
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function logout() {
+            auth.signOut().then(() => {
+                currentUser = null;
+                updateUI(null);
+                showAuthScreen();
+                showToast('Çıkış yapıldı', 'info');
+                if (unsubscribeRoom) {
+                    unsubscribeRoom();
+                    unsubscribeRoom = null;
+                }
+            });
+        }
+        
+        // ==========================================
+        // AUTH STATE LISTENER
+        // ==========================================
+        auth.onAuthStateChanged((user) => {
+            if (user && user.emailVerified) {
+                currentUser = user;
+                updateUI(user);
+                showDashboard();
+                loadUserData();
+            } else if (user && !user.emailVerified) {
+                document.getElementById('emailVerificationNotice').style.display = 'block';
+                showToast('E-postanı doğrula!', 'error');
+                auth.signOut();
+            } else {
+                currentUser = null;
+                updateUI(null);
+                showAuthScreen();
+            }
+        });
+        
+        // ==========================================
+        // UI FUNCTIONS
+        // ==========================================
+        function updateUI(user) {
+            if (user) {
+                userBadge.style.display = 'flex';
+                authBtn.textContent = '🚪 Çıkış';
+                userNameDisplay.textContent = user.displayName || user.email || 'Kullanıcı';
+                userAvatar.textContent = (user.displayName || 'K')[0].toUpperCase();
+                document.getElementById('profileName').textContent = user.displayName || user.email;
+                document.getElementById('profileEmail').textContent = user.email || '-';
+                document.getElementById('profileAvatar').textContent = (user.displayName || 'K')[0].toUpperCase();
+            } else {
+                userBadge.style.display = 'none';
+                authBtn.textContent = '🔐 Giriş Yap';
+            }
+        }
+        
+        function showDashboard() {
+            authScreen.style.display = 'none';
+            dashboard.classList.add('active');
+            renderAll();
+        }
+        
+        function showAuthScreen() {
+            authScreen.style.display = 'flex';
+            dashboard.classList.remove('active');
+        }
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            if (tabId === 'tabMarket') renderMarketplace();
+            if (tabId === 'tabTrade') renderTradeRoom();
+            if (tabId === 'tabProfile') renderProfile();
+        }
+        
+        function navigateTo(section) {
+            if (section === 'dashboard') {
+                if (currentUser) {
+                    showDashboard();
+                } else {
+                    showAuthScreen();
+                }
+            }
+        }
+        
+        // ==========================================
+        // TOAST
+        // ==========================================
+        function showToast(msg, type = 'info') {
+            toast.textContent = msg;
+            toast.className = 'toast ' + type + ' show';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+        
+        // ==========================================
+        // ENCRYPTION UTILS
+        // ==========================================
+        function encryptData(data, secretKey = 'valotrade-secret-key-2026') {
+            return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+        }
+        
+        function decryptData(encryptedData, secretKey = 'valotrade-secret-key-2026') {
+            try {
+                const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // ==========================================
+        // LOAD USER DATA
+        // ==========================================
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            // Load accounts
+            db.collection('accounts')
+                .where('owner', '==', currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    accounts = [];
+                    snapshot.forEach(doc => {
+                        accounts.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderAll();
+                });
+            
+            // Load trades
+            db.collection('trades')
+                .where('participants', 'array-contains', currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    trades = [];
+                    snapshot.forEach(doc => {
+                        trades.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderAll();
+                });
+            
+            // Load offers
+            db.collection('offers')
+                .where('from', '==', currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    offers = [];
+                    snapshot.forEach(doc => {
+                        offers.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderAll();
+                });
+        }
+        
+        // ==========================================
+        // RENDER FUNCTIONS
+        // ==========================================
+        function renderAll() {
+            renderStats();
+            renderMarketplace();
+            renderProfile();
+            if (document.getElementById('tabTrade').classList.contains('active')) {
+                renderTradeRoom();
+            }
+        }
+        
+        function renderStats() {
+            document.getElementById('statAccounts').textContent = accounts.filter(a => a.verified).length;
+            document.getElementById('statTrades').textContent = trades.filter(t => t.status === 'completed').length;
+            document.getElementById('statOffers').textContent = offers.filter(o => o.status === 'pending').length;
+            document.getElementById('statEscrow').textContent = escrowCount;
+        }
+        
+        function renderMarketplace() {
+            const container = document.getElementById('marketplaceList');
+            const search = document.getElementById('searchMarket').value.toLowerCase();
+            const skinFilter = document.getElementById('filterSkin').value;
+            
+            let filtered = accounts.filter(a => a.verified && a.status === 'active');
+            if (search) {
+                filtered = filtered.filter(a =>
+                    a.username.toLowerCase().includes(search) ||
+                    a.tag.toLowerCase().includes(search) ||
+                    a.skins?.some(s => s.toLowerCase().includes(search))
+                );
+            }
+            if (skinFilter) {
+                filtered = filtered.filter(a =>
+                    a.skins?.some(s => s.toLowerCase().includes(skinFilter.toLowerCase()))
+                );
+            }
+            
+            if (!filtered.length) {
+                container.innerHTML =
+                    `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--color-text-muted);">
+                        <p style="font-size:48px;">🏪</p>
+                        <p>Henüz listelenmiş hesap yok.</p>
+                    </div>`;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(a => `
+                <div class="account-card">
+                    <div>
+                        <span class="badge badge-verified">✅ Doğrulandı</span>
+                        <span style="color:var(--color-text-muted); font-size:var(--font-size-xs); margin-left:8px;">${a.ownerName || 'Anonim'}</span>
+                    </div>
+                    <div class="name">${a.username}${a.tag || ''}</div>
+                    <div class="skins">${(a.skins || []).map(s => `<span>🎨 ${s}</span>`).join(' ')}</div>
+                    <p style="color:var(--color-text-muted); font-size:var(--font-size-sm);">${a.desc || 'Açıklama yok'}</p>
+                    <div class="actions">
+                        ${a.owner !== currentUser?.uid ? 
+                            `<button class="btn btn-primary btn-sm" onclick="sendOffer('${a.id}')">📩 Teklif</button>` : 
+                            `<span style="color:var(--color-text-muted); font-size:var(--font-size-xs);">🔒 Kendi hesabın</span>`}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderProfile() {
+            if (!currentUser) return;
+            document.getElementById('profileAccountCount').textContent = accounts.filter(a => a.owner === currentUser.uid)
+                .length;
+            document.getElementById('profileTrades').textContent = trades.filter(t =>
+                t.from === currentUser.uid || t.to === currentUser.uid
+            ).length;
+            document.getElementById('profileDate').textContent = currentUser.metadata?.creationTime ?
+                new Date(currentUser.metadata.creationTime).toLocaleDateString('tr-TR') : '-';
+        }
+        
+        // ==========================================
+        // TRADE ROOM FUNCTIONS
+        // ==========================================
+        function createTradeRoom() {
+            if (!currentUser) {
+                showToast('Önce giriş yap!', 'error');
+                return;
+            }
+            
+            const roomId = 'TRD-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            const roomData = {
+                roomId: roomId,
+                createdBy: currentUser.uid,
+                createdByName: currentUser.displayName || currentUser.email,
+                createdAt: new Date().toISOString(),
+                status: 'waiting',
+                participants: {
+                    [currentUser.uid]: {
+                        uid: currentUser.uid,
+                        displayName: currentUser.displayName || currentUser.email,
+                        data: {
+                            valorantUsername: '',
+                            valorantPassword: '',
+                            skinList: ''
+                        },
+                        ready: false,
+                        connected: true
+                    }
+                },
+                chat: [],
+                tradeCompleted: false
+            };
+            
+            db.collection('tradeRooms').doc(roomId).set(roomData)
+                .then(() => {
+                    currentRoomId = roomId;
+                    showToast('Takas odası oluşturuldu! Paylaş: ' + roomId, 'success');
+                    renderTradeRoom();
+                    listenToRoom(roomId);
+                    switchTab('tabTrade');
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function joinTradeRoom() {
+            const roomId = prompt('Takas oda ID\'sini girin:');
+            if (!roomId) return;
+            
+            db.collection('tradeRooms').doc(roomId).get()
+                .then((doc) => {
+                    if (!doc.exists) {
+                        showToast('Oda bulunamadı!', 'error');
+                        return;
+                    }
+                    const data = doc.data();
+                    if (data.tradeCompleted) {
+                        showToast('Bu takas tamamlanmış!', 'error');
+                        return;
+                    }
+                    if (data.participants[currentUser.uid]) {
+                        showToast('Zaten bu odadasın!', 'info');
+                        currentRoomId = roomId;
+                        renderTradeRoom();
+                        listenToRoom(roomId);
+                        switchTab('tabTrade');
+                        return;
+                    }
+                    if (Object.keys(data.participants).length >= 2) {
+                        showToast('Oda dolu!', 'error');
+                        return;
+                    }
+                    
+                    // Join room
+                    const updateData = {};
+                    updateData[`participants.${currentUser.uid}`] = {
+                        uid: currentUser.uid,
+                        displayName: currentUser.displayName || currentUser.email,
+                        data: {
+                            valorantUsername: '',
+                            valorantPassword: '',
+                            skinList: ''
+                        },
+                        ready: false,
+                        connected: true
+                    };
+                    updateData.status = 'waiting';
+                    
+                    db.collection('tradeRooms').doc(roomId).update(updateData)
+                        .then(() => {
+                            currentRoomId = roomId;
+                            showToast('Odaya katıldın!', 'success');
+                            renderTradeRoom();
+                            listenToRoom(roomId);
+                            switchTab('tabTrade');
+                        })
+                        .catch((error) => {
+                            showToast('Hata: ' + error.message, 'error');
+                        });
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function listenToRoom(roomId) {
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
+            
+            unsubscribeRoom = db.collection('tradeRooms').doc(roomId)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        renderTradeRoom(data);
+                        renderChat(data);
+                    }
+                });
+        }
+        
+        function renderTradeRoom(roomData) {
+            const container = document.getElementById('tradeRoomContainer');
+            
+            if (!currentRoomId) {
+                container.innerHTML = `
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                        <button class="btn btn-primary" onclick="createTradeRoom()">🚀 Yeni Takas Başlat</button>
+                        <button class="btn btn-outline" onclick="joinTradeRoom()">🔗 Odaya Katıl</button>
+                    </div>
+                    <div style="text-align:center; padding:40px; color:var(--color-text-muted);">
+                        <p style="font-size:48px;">⚔️</p>
+                        <p>Henüz aktif takas odası yok.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (!roomData) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--color-text-muted);">Yükleniyor...</div>`;
+                return;
+            }
+            
+            const participants = Object.values(roomData.participants || {});
+            const isCreator = roomData.createdBy === currentUser.uid;
+            const allReady = participants.every(p => p.ready);
+            const canReveal = participants.length === 2 && allReady;
+            
+            container.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <span style="font-weight:700; color:var(--color-primary);">Oda ID:</span>
+                        <span style="font-family:monospace; background:var(--color-bg-input); padding:4px 12px; border-radius:8px;">${roomData.roomId}</span>
+                        <button class="btn btn-sm btn-outline" onclick="copyRoomId()">📋 Kopyala</button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span class="status ${roomData.status === 'waiting' ? 'status-waiting' : roomData.status === 'completed' ? 'status-completed' : 'status-ready'}">
+                            ${roomData.status === 'waiting' ? '⏳ Bekliyor' : roomData.status === 'completed' ? '✅ Tamamlandı' : '🔄 Hazır'}
+                        </span>
+                        ${!roomData.tradeCompleted ? `<button class="btn btn-sm btn-danger" onclick="leaveTradeRoom()">🚪 Çık</button>` : ''}
+                    </div>
+                </div>
+                
+                <div class="trade-container">
+                    ${participants.map((p, index) => `
+                        <div class="trade-panel ${p.uid === currentUser.uid ? 'active' : ''}">
+                            <div class="panel-header">
+                                <h4>${p.displayName} ${p.uid === currentUser.uid ? '(Sen)' : ''}</h4>
+                                <span class="status ${p.ready ? 'status-ready' : 'status-waiting'}">
+                                    ${p.ready ? '✅ Hazır' : '⏳ Bekliyor'}
+                                </span>
+                            </div>
+                            ${p.uid === currentUser.uid ? `
+                                <div class="secure-input">
+                                    <div class="form-group">
+                                        <label>Valorant Kullanıcı Adı</label>
+                                        <input type="text" id="tradeUsername" placeholder="Kullanıcı adı..." />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Valorant Şifre</label>
+                                        <input type="password" id="tradePassword" placeholder="••••••••" />
+                                        <span class="lock-icon">🔒</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Skin Listesi</label>
+                                        <input type="text" id="tradeSkins" placeholder="Vandal, Phantom, Knife..." />
+                                    </div>
+                                    <div class="secure-badge">
+                                        <span>🔐</span>
+                                        <span>Bilgilerin AES-256 ile şifreleniyor</span>
+                                    </div>
+                                    <button class="btn btn-success" onclick="submitTradeData()" style="margin-top:8px;">✅ Hazırım</button>
+                                </div>
+                            ` : `
+                                <div style="color:var(--color-text-muted); text-align:center; padding:20px;">
+                                    ${p.ready ? '✅ Bilgilerini hazırladı.' : '⏳ Bilgilerini bekliyor...'}
+                                </div>
+                            `}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${canReveal && !roomData.tradeCompleted ? `
+                    <div style="text-align:center; margin:20px 0;">
+                        <button class="btn btn-primary" onclick="revealTrade()" style="padding:14px 40px; font-size:var(--font-size-lg);">
+                            🔓 Karşılıklı Göster
+                        </button>
+                        <p style="color:var(--color-text-muted); font-size:var(--font-size-xs); margin-top:8px;">
+                            Her iki taraf da hazır. Bilgiler aynı anda gösterilecek.
+                        </p>
+                    </div>
+                ` : ''}
+                
+                ${roomData.tradeCompleted ? `
+                    <div style="background:rgba(0,200,83,0.08); border:1px solid rgba(0,200,83,0.15); border-radius:12px; padding:16px; text-align:center; margin-top:16px;">
+                        <p style="color:#00c853; font-weight:700;">✅ Takas Tamamlandı!</p>
+                        <p style="color:var(--color-text-muted); font-size:var(--font-size-sm);">Her iki taraf da bilgileri gördü.</p>
+                    </div>
+                ` : ''}
+                
+                <!-- Chat -->
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Dinamik -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Mesaj yaz..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+                        <button class="btn btn-primary btn-sm" onclick="sendChatMessage()">Gönder</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderChat(roomData) {
+            if (!roomData) return;
+            const messages = roomData.chat || [];
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            container.innerHTML = messages.map(msg => `
+                <div class="chat-message">
+                    <span class="sender">${msg.senderName}:</span>
+                    <span class="text">${msg.message}</span>
+                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString('tr-TR')}</span>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function submitTradeData() {
+            if (!currentRoomId || !currentUser) return;
+            
+            const username = document.getElementById('tradeUsername').value.trim();
+            const password = document.getElementById('tradePassword').value.trim();
+            const skins = document.getElementById('tradeSkins').value.trim();
+            
+            if (!username || !password || !skins) {
+                showToast('Tüm alanları doldurun!', 'error');
+                return;
+            }
+            
+            const encryptedData = encryptData({
+                username: username,
+                password: password,
+                skins: skins.split(',').map(s => s.trim())
+            });
+            
+            const updateData = {};
+            updateData[`participants.${currentUser.uid}.data.valorantUsername`] = encryptedData;
+            updateData[`participants.${currentUser.uid}.data.valorantPassword`] = encryptedData;
+            updateData[`participants.${currentUser.uid}.data.skinList`] = encryptedData;
+            updateData[`participants.${currentUser.uid}.ready`] = true;
+            
+            db.collection('tradeRooms').doc(currentRoomId).update(updateData)
+                .then(() => {
+                    showToast('Bilgilerin şifrelendi ve hazır!', 'success');
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function revealTrade() {
+            if (!currentRoomId) return;
+            
+            db.collection('tradeRooms').doc(currentRoomId).get()
+                .then((doc) => {
+                    const data = doc.data();
+                    if (!data) return;
+                    
+                    const participants = Object.values(data.participants || {});
+                    if (participants.length < 2 || !participants.every(p => p.ready)) {
+                        showToast('Her iki taraf da hazır değil!', 'error');
+                        return;
+                    }
+                    
+                    // Show encrypted data (simulate decryption)
+                    const decryptedData = {};
+                    participants.forEach(p => {
+                        const encrypted = p.data?.valorantUsername;
+                        if (encrypted) {
+                            const decrypted = decryptData(encrypted);
+                            if (decrypted) {
+                                decryptedData[p.displayName] = decrypted;
+                            }
+                        }
+                    });
+                    
+                    // Display data
+                    let message = '🔓 Bilgiler Gösterildi:\n\n';
+                    Object.entries(decryptedData).forEach(([name, data]) => {
+                        message += `👤 ${name}:\n`;
+                        message += `  Kullanıcı: ${data.username || '-'}\n`;
+                        message += `  Skinler: ${Array.isArray(data.skins) ? data.skins.join(', ') : data.skins || '-'}\n`;
+                        message += `  Şifre: ${data.password ? '🔒 ****' : '-'}\n\n`;
+                    });
+                    
+                    showToast('Bilgiler gösterildi!', 'success');
+                    alert(message);
+                    
+                    // Mark as completed
+                    db.collection('tradeRooms').doc(currentRoomId).update({
+                        tradeCompleted: true,
+                        status: 'completed'
+                    });
+                    
+                    // Update stats
+                    escrowCount++;
+                    renderAll();
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || !currentRoomId || !currentUser) return;
+            
+            const chatMessage = {
+                sender: currentUser.uid,
+                senderName: currentUser.displayName || currentUser.email,
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            db.collection('tradeRooms').doc(currentRoomId).update({
+                chat: firebase.firestore.FieldValue.arrayUnion(chatMessage)
+            }).then(() => {
+                input.value = '';
+            }).catch((error) => {
+                showToast('Hata: ' + error.message, 'error');
+            });
+        }
+        
+        function leaveTradeRoom() {
+            if (!confirm('Odadan çıkmak istediğine emin misin?')) return;
+            
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
+            
+            // If user is creator and no one else, delete room
+            db.collection('tradeRooms').doc(currentRoomId).get()
+                .then((doc) => {
+                    const data = doc.data();
+                    if (data && data.createdBy === currentUser.uid && Object.keys(data.participants).length <= 1) {
+                        db.collection('tradeRooms').doc(currentRoomId).delete();
+                    } else if (data) {
+                        // Remove user from participants
+                        const updateData = {};
+                        updateData[`participants.${currentUser.uid}`] = firebase.firestore.FieldValue.delete();
+                        db.collection('tradeRooms').doc(currentRoomId).update(updateData);
+                    }
+                    currentRoomId = null;
+                    renderTradeRoom();
+                    showToast('Odadan çıkıldı.', 'info');
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        function copyRoomId() {
+            if (currentRoomId) {
+                navigator.clipboard.writeText(currentRoomId)
+                    .then(() => showToast('Oda ID kopyalandı!', 'success'))
+                    .catch(() => showToast('Oda ID: ' + currentRoomId, 'info'));
+            }
+        }
+        
+        // ==========================================
+        // OFFERS
+        // ==========================================
+        function sendOffer(accountId) {
+            if (!currentUser) {
+                showToast('Önce giriş yap!', 'error');
+                return;
+            }
+            
+            const account = accounts.find(a => a.id === accountId);
+            if (!account) return;
+            if (account.owner === currentUser.uid) {
+                showToast('Kendi hesabına teklif gönderemezsin!', 'error');
+                return;
+            }
+            
+            // Check if offer already exists
+            const existing = offers.find(o => o.accountId === accountId && o.from === currentUser.uid && o.status ===
+                'pending');
+            if (existing) {
+                showToast('Zaten teklif gönderdin!', 'warning');
+                return;
+            }
+            
+            const offerData = {
+                accountId: accountId,
+                from: currentUser.uid,
+                fromName: currentUser.displayName || currentUser.email,
+                to: account.owner,
+                toName: account.ownerName,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                message: prompt('Teklif mesajı (opsiyonel):') || 'Takas teklifi'
+            };
+            
+            db.collection('offers').add(offerData)
+                .then(() => {
+                    showToast('Teklif gönderildi!', 'success');
+                    renderAll();
+                })
+                .catch((error) => {
+                    showToast('Hata: ' + error.message, 'error');
+                });
+        }
+        
+        // ==========================================
+        // INIT
+        // ==========================================
+        console.log('🚀 ValoTrade başlatıldı!');
+        
+        // Load demo accounts
+        setTimeout(() => {
+            if (accounts.length === 0 && !currentUser) {
+                const demoAccounts = [
+                    { username: 'Legendary', tag: '#TR1', skins: ['Vandal', 'Phantom', 'Knife'],
+                    desc: 'Valorant Champion Set 2024', verified: true, status: 'active', ownerName: 'Demo Kullanıcı' },
+                    { username: 'ShadowStrike', tag: '#EU2', skins: ['Oni Claw', 'Elderflame', 'Prime Vandal'],
+                        desc: 'Limited Edition Skin Set', verified: true, status: 'active',
+                    ownerName: 'Valo Collector' }
+                ];
+                demoAccounts.forEach((acc, index) => {
+                    db.collection('accounts').add({
+                        ...acc,
+                        id: 'demo_' + index,
+                        owner: 'demo_' + index,
+                        createdAt: new Date().toISOString()
+                    });
+                });
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
