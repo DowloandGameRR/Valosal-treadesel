@@ -6,9 +6,9 @@
 <title>ValoTrade — Envanter Eşleştirme Panosu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.14.1/firebase-firestore-compat.min.js"></script>
 <style>
 /* ==============================================
    TOKENS
@@ -547,6 +547,14 @@ const firebaseConfig = {
   appId: "1:447150523512:web:077e53b627f63a86e0998d",
   measurementId: "G-BXMHVDH7RD"
 };
+if(typeof firebase === 'undefined'){
+  document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px;font-family:sans-serif;background:#181d25;border:1px solid #232a34;border-radius:12px;color:#e9ecf1;">' +
+    '<h2 style="margin-bottom:10px;">Firebase betikleri yüklenemedi</h2>' +
+    '<p style="color:#8b93a1;font-size:14px;line-height:1.6;">Bu sayfa Firebase SDK\'sını internet üzerinden bir CDN\'den yüklüyor. Bu önizleme ortamı dış betiklere izin vermiyor olabilir. Dosyayı bilgisayarına indirip normal bir tarayıcıda (internet bağlantısı açıkken) doğrudan açtığında sorunsuz çalışacaktır.</p>' +
+    '</div>';
+  throw new Error('firebase SDK yüklenemedi — CDN engellenmiş olabilir.');
+}
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -688,10 +696,13 @@ auth.onAuthStateChanged(user => {
 function friendlyError(e){
   const map = {
     'auth/invalid-email':'Geçersiz e-posta adresi.',
-    'auth/user-not-found':'Bu e-posta ile kayıtlı kullanıcı yok.',
+    'auth/user-not-found':'Bu e-posta ile kayıtlı kullanıcı yok. Önce "Kayıt Ol" ile hesap oluştur.',
     'auth/wrong-password':'Şifre hatalı.',
-    'auth/email-already-in-use':'Bu e-posta zaten kayıtlı.',
-    'auth/popup-closed-by-user':'Google penceresi kapatıldı.'
+    'auth/invalid-credential':'E-posta veya şifre hatalı — ya da bu hesap henüz kayıtlı değil. Yeni kullanıyorsan önce "Kayıt Ol" ile hesap oluştur.',
+    'auth/email-already-in-use':'Bu e-posta zaten kayıtlı. "Giriş Yap" sekmesini kullan.',
+    'auth/popup-closed-by-user':'Google penceresi kapatıldı.',
+    'auth/network-request-failed':'Ağ hatası — internet bağlantını kontrol et.',
+    'auth/too-many-requests':'Çok fazla başarısız deneme yapıldı. Bir süre sonra tekrar dene.'
   };
   return map[e.code] || ('Hata: ' + e.message);
 }
