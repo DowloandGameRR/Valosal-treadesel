@@ -636,11 +636,10 @@ function submitAuth(){
     if(pass.length < 6){ showToast('Şifre en az 6 karakter olmalı.', 'error'); return; }
     auth.createUserWithEmailAndPassword(email, pass)
       .then(cred => {
-        cred.user.sendEmailVerification();
-        cred.user.updateProfile({ displayName: email.split('@')[0] });
-        return db.collection('users').doc(cred.user.uid).set(newUserDoc(email, email.split('@')[0]));
-      })
-      .then(() => {
+        cred.user.sendEmailVerification().catch(()=>{});
+        cred.user.updateProfile({ displayName: email.split('@')[0] }).catch(()=>{});
+        db.collection('users').doc(cred.user.uid).set(newUserDoc(email, email.split('@')[0]))
+          .catch(err => console.warn('Kullanıcı profili yazılamadı (Firestore kurallarını kontrol et):', err));
         showToast('Kayıt başarılı. E-postanı doğrula.', 'success');
         document.getElementById('emailVerifyNotice').style.display = 'block';
         auth.signOut();
@@ -651,18 +650,36 @@ function submitAuth(){
 }
 
 function loginWithGoogle(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-    .then(result => {
-      const user = result.user;
-      return db.collection('users').doc(user.uid).get().then(doc => {
-        if(!doc.exists){
-          return db.collection('users').doc(user.uid).set(newUserDoc(user.email, user.displayName || user.email.split('@')[0]));
-        }
-      });
-    })
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(result => handleGoogleUser(result.user))
     .then(() => showToast('Google ile giriş başarılı.', 'success'))
-    .catch(e => showToast(friendlyError(e), 'error'));
+    .catch(e => {
+      if(['auth/popup-blocked','auth/cancelled-popup-request','auth/popup-closed-by-user'].includes(e.code)){
+        showToast('Pop-up engellendi, yönlendirmeyle deneniyor...', 'info');
+        auth.signInWithRedirect(provider).catch(e2 => showToast(friendlyError(e2), 'error'));
+      } else {
+        showToast(friendlyError(e), 'error');
+      }
+    });
 }
+
+function handleGoogleUser(user){
+  return db.collection('users').doc(user.uid).get().then(doc => {
+    if(!doc.exists){
+      return db.collection('users').doc(user.uid)
+        .set(newUserDoc(user.email, user.displayName || user.email.split('@')[0]))
+        .catch(err => console.warn('Kullanıcı profili yazılamadı (Firestore kurallarını kontrol et):', err));
+    }
+  });
+}
+
+// Yönlendirmeyle giriş tamamlandığında (pop-up engellenen durumlarda) sonucu yakala
+auth.getRedirectResult().then(result => {
+  if(result && result.user){
+    handleGoogleUser(result.user).then(() => showToast('Google ile giriş başarılı.', 'success'));
+  }
+}).catch(e => { if(e && e.code) showToast(friendlyError(e), 'error'); });
 
 function newUserDoc(email, displayName){
   return { email, displayName, avatarEmoji:null, createdAt:new Date().toISOString(), ratingSum:0, ratingCount:0, completed:0 };
@@ -702,7 +719,9 @@ function friendlyError(e){
     'auth/email-already-in-use':'Bu e-posta zaten kayıtlı. "Giriş Yap" sekmesini kullan.',
     'auth/popup-closed-by-user':'Google penceresi kapatıldı.',
     'auth/network-request-failed':'Ağ hatası — internet bağlantını kontrol et.',
-    'auth/too-many-requests':'Çok fazla başarısız deneme yapıldı. Bir süre sonra tekrar dene.'
+    'auth/too-many-requests':'Çok fazla başarısız deneme yapıldı. Bir süre sonra tekrar dene.',
+    'auth/unauthorized-domain':'Bu site adresi Firebase Authentication ayarlarında yetkili değil. Firebase Console → Authentication → Settings → Authorized domains kısmına bu adresi eklemen gerekiyor. (Dosyayı doğrudan çift tıklayarak açıyorsan — file:// — Google girişi çalışmaz, dosyanın bir web adresinden (https) sunuluyor olması gerekir.)',
+    'auth/popup-blocked':'Tarayıcı pop-up penceresini engelledi. Pop-up izni ver veya yönlendirme yöntemi denenecek.'
   };
   return map[e.code] || ('Hata: ' + e.message);
 }
@@ -1158,15 +1177,24 @@ function submitReport(){
 // SAFETY GUIDE
 // ==================================================
 function openSafetyGuide(){
-  alert(
-    'Güvenli Takas Rehberi\n\n' +
-    '1) Hiçbir zaman hesap kullanıcı adı veya şifreni bir takas ortağına ya da üçüncü bir siteye yazma.\n' +
-    '2) Karşı tarafın profilini ve geçmiş değerlendirmelerini incele.\n' +
-    '3) Takas şartlarını (kim ne veriyor) önceden yazılı olarak netleştir.\n' +
-    '4) Hesap/envanter devrini yalnızca oyunun resmi destek kanalları veya bilinen, güvenilir bir yöntemle yap.\n' +
-    '5) Şüpheli davranış gördüğünde (şifre isteme, acele ettirme, aşırı baskı) takası durdur ve bildir.'
-  );
+  openModal('safetyModal');
 }
 </script>
+<!-- SAFETY GUIDE MODAL -->
+<div id="safetyModal" class="modal-overlay">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" onclick="closeModal('safetyModal')">✕</button>
+    <h3>Güvenli Takas Rehberi</h3>
+    <div style="display:flex;flex-direction:column;gap:14px;font-size:13.5px;color:var(--text-dim);line-height:1.55;">
+      <div><b style="color:var(--text);">1. Şifreni hiç kimseyle paylaşma.</b><br>Hesap kullanıcı adı veya şifreni bir takas ortağına ya da üçüncü bir siteye asla yazma. ValoTrade bunu istemez.</div>
+      <div><b style="color:var(--text);">2. Profili ve puanı incele.</b><br>Teklif kabul etmeden önce karşı tarafın geçmiş değerlendirmelerine bak.</div>
+      <div><b style="color:var(--text);">3. Şartları yazılı netleştir.</b><br>Kim ne veriyor, ne zaman — takas odasındaki sohbette önceden netleştir.</div>
+      <div><b style="color:var(--text);">4. Devri güvenilir bir kanaldan yap.</b><br>Hesap/envanter devrini yalnızca oyunun resmi destek süreçleri veya bilinen güvenilir bir yöntemle tamamla.</div>
+      <div><b style="color:var(--text);">5. Şüpheli davranışta dur ve bildir.</b><br>Şifre isteme, acele ettirme veya aşırı baskı gördüğünde takası durdur ve "Kullanıcıyı Bildir" ile bize ilet.</div>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="closeModal('safetyModal')">Anladım</button>
+  </div>
+</div>
+
 </body>
 </html>
