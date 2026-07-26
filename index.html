@@ -1,1370 +1,1161 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ValoTrade - Güvenli Takas</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    
-    <style>
-        /* ==========================================
-           RESET & VARIABLES
-           ========================================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --bg-primary: #0a0a12;
-            --bg-secondary: #111122;
-            --bg-card: #1a1a2e;
-            --bg-input: #0d0d1a;
-            --border-color: #2a2a4a;
-            --border-hover: #6d28d9;
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --text-muted: #475569;
-            --primary: #7c3aed;
-            --primary-dark: #6d28d9;
-            --primary-glow: rgba(124, 58, 237, 0.3);
-            --accent: #a855f7;
-            --success: #10b981;
-            --success-glow: rgba(16, 185, 129, 0.2);
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: 16px;
-        }
-        
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-        
-        /* ==========================================
-           APP CONTAINER
-           ========================================== */
-        .app {
-            max-width: 1100px;
-            width: 100%;
-            background: var(--bg-secondary);
-            border-radius: 24px;
-            padding: 20px 28px;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
-            min-height: 90vh;
-        }
-        
-        /* ==========================================
-           HEADER
-           ========================================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .logo-icon { font-size: 28px; font-weight: 900; color: var(--primary); }
-        .logo-text {
-            font-size: 22px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        
-        .user-badge {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            padding: 5px 14px 5px 8px;
-            border-radius: 40px;
-            border: 1px solid var(--border-color);
-        }
-        .user-badge.show { display: flex; }
-        
-        .avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 4px 20px var(--primary-glow);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--primary-glow); }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-        .btn-outline:hover { border-color: var(--primary); color: white; }
-        .btn-success {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
-        }
-        .btn-sm { padding: 5px 14px; font-size: 12px; }
-        .btn-block { width: 100%; justify-content: center; }
-        
-        /* ==========================================
-           AUTH SCREEN
-           ========================================== */
-        .auth-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 70vh;
-            padding: 30px 16px;
-        }
-        .auth-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 40px 44px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: var(--shadow);
-        }
-        .auth-box .icon-top { text-align: center; font-size: 48px; margin-bottom: 8px; }
-        .auth-box h2 { text-align: center; font-size: 26px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .auth-box .sub { text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
-        .form-group input {
-            width: 100%;
-            padding: 10px 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 14px;
-            transition: var(--transition);
-        }
-        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
-        .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; }
-        .auth-divider hr { flex: 1; border: none; border-top: 1px solid var(--border-color); }
-        .auth-divider span { color: var(--text-muted); font-size: 12px; }
-        .btn-google { width: 100%; justify-content: center; background: white; color: #222; padding: 10px; border-radius: var(--radius-sm); }
-        .btn-google:hover { background: #f0f0f0; }
-        .auth-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
-        .auth-footer button { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; }
-        .auth-footer button:hover { text-decoration: underline; }
-        #registerFields { display: none; }
-        #emailVerifyNotice { display: none; margin-top: 12px; padding: 10px 14px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.15); border-radius: var(--radius-sm); color: #fbbf24; font-size: 13px; text-align: center; }
-        
-        /* ==========================================
-           DASHBOARD
-           ========================================== */
-        .dashboard { display: none; }
-        .dashboard.active { display: block; }
-        
-        /* ==========================================
-           SECURITY BANNER
-           ========================================== */
-        .security-banner {
-            background: rgba(124, 58, 237, 0.06);
-            border: 1px solid rgba(124, 58, 237, 0.10);
-            border-radius: var(--radius-sm);
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .security-banner strong { color: var(--accent); }
-        
-        /* ==========================================
-           STATS
-           ========================================== */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 16px 12px;
-            text-align: center;
-        }
-        .stat-card .num { font-size: 26px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .stat-card .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-        
-        /* ==========================================
-           SUCCESS CENTER
-           ========================================== */
-        .success-center {
-            text-align: center;
-            padding: 24px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            margin-bottom: 24px;
-        }
-        .success-center .icon { font-size: 40px; margin-bottom: 4px; }
-        .success-center h2 { font-size: 24px; font-weight: 800; color: var(--success); }
-        .success-center p { color: var(--text-secondary); font-size: 14px; }
-        
-        /* ==========================================
-           CONTENT
-           ========================================== */
-        .content { max-width: 800px; margin: 0 auto; }
-        
-        /* ==========================================
-           NEW TRADE
-           ========================================== */
-        .new-trade-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 24px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        .new-trade-box .form-group { margin-bottom: 14px; }
-        .new-trade-box .form-group label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
-        .new-trade-box .form-group input {
-            width: 100%;
-            padding: 10px 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-        .new-trade-box .form-group input:focus { outline: none; border-color: var(--primary); }
-        
-        /* ==========================================
-           TRADE LIST
-           ========================================== */
-        .trade-list { display: flex; flex-direction: column; gap: 14px; }
-        .trade-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 18px 20px;
-            transition: var(--transition);
-        }
-        .trade-card:hover { border-color: var(--border-hover); }
-        .trade-card .top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .trade-card .top .left { display: flex; align-items: center; gap: 12px; }
-        .trade-card .top .left .avatar-sm {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 13px;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .trade-card .top .left .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
-        .trade-card .top .left .info h4 { font-size: 15px; font-weight: 700; }
-        .trade-card .top .left .info p { font-size: 12px; color: var(--text-muted); }
-        .trade-card .status-badge {
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .status-open { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
-        .status-pending { background: rgba(245, 158, 11, 0.12); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.15); }
-        .status-completed { background: rgba(124, 58, 237, 0.12); color: var(--accent); border: 1px solid rgba(124, 58, 237, 0.15); }
-        .trade-card .bottom { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
-        
-        /* ==========================================
-           TRADE ROOM
-           ========================================== */
-        .trade-room {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 24px;
-        }
-        .trade-room .room-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .trade-room .room-header .room-id {
-            font-family: monospace;
-            background: var(--bg-input);
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-size: 14px;
-        }
-        .trade-room .players {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .trade-room .player-panel {
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 18px 20px;
-        }
-        .trade-room .player-panel .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-        }
-        .trade-room .player-panel .panel-header h4 { font-size: 15px; }
-        .trade-room .player-panel .ready-badge {
-            padding: 3px 12px;
-            border-radius: 40px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .ready-yes { background: rgba(16, 185, 129, 0.12); color: var(--success); }
-        .ready-no { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-        .trade-room .player-panel .data-display { font-size: 13px; color: var(--text-secondary); }
-        .trade-room .player-panel .data-display .label { color: var(--text-muted); font-size: 11px; }
-        .trade-room .player-panel .data-display .value { color: white; font-weight: 500; }
-        .trade-room .player-panel .data-display .value.hidden { color: var(--text-muted); font-style: italic; }
-        .trade-room .player-panel .form-group { margin-bottom: 8px; }
-        .trade-room .player-panel .form-group label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 2px; }
-        .trade-room .player-panel .form-group input {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 13px;
-        }
-        .trade-room .player-panel .form-group input:focus { outline: none; border-color: var(--primary); }
-        .trade-room .reveal-section {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        .trade-room .waiting-notice {
-            text-align: center;
-            margin-top: 16px;
-            padding: 12px;
-            background: rgba(245, 158, 11, 0.08);
-            border: 1px solid rgba(245, 158, 11, 0.15);
-            border-radius: var(--radius-sm);
-        }
-        .trade-room .waiting-notice p { color: var(--warning); font-size: 13px; }
-        .trade-room .completed-notice {
-            text-align: center;
-            margin-top: 16px;
-            padding: 16px;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.15);
-            border-radius: var(--radius-sm);
-        }
-        .trade-room .completed-notice p { color: var(--success); font-weight: 700; font-size: 18px; }
-        
-        /* ==========================================
-           PROFILE MODAL
-           ========================================== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 32px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: var(--shadow);
-        }
-        .modal .close {
-            float: right;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 24px;
-            cursor: pointer;
-        }
-        .modal .close:hover { color: white; }
-        .modal h3 { margin-bottom: 16px; color: var(--primary); }
-        
-        /* ==========================================
-           TOAST
-           ========================================== */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
-            display: none;
-            z-index: 1000;
-            max-width: 350px;
-            font-size: 13px;
-            animation: slideUp 0.3s ease;
-        }
-        .toast.show { display: block; }
-        .toast.success { border-color: var(--success); }
-        .toast.error { border-color: var(--danger); }
-        .toast.info { border-color: var(--primary); }
-        
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* ==========================================
-           RESPONSIVE
-           ========================================== */
-        @media (max-width: 768px) {
-            .app { padding: 12px 16px; }
-            .stats { grid-template-columns: 1fr 1fr; }
-            .trade-room .players { grid-template-columns: 1fr; }
-            .auth-box { padding: 24px 20px; }
-            .header { flex-direction: column; align-items: stretch; gap: 10px; }
-            .header-right { justify-content: space-between; }
-            .success-center h2 { font-size: 20px; }
-        }
-        @media (max-width: 480px) {
-            .stats { grid-template-columns: 1fr; }
-            .trade-card .top { flex-direction: column; align-items: stretch; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValoTrade — Envanter Eşleştirme Panosu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+/* ==============================================
+   TOKENS
+   ============================================== */
+:root{
+  --ink:#0a0c10;
+  --panel:#12161c;
+  --panel-2:#181d25;
+  --line:#232a34;
+  --line-soft:#1a2029;
+  --text:#e9ecf1;
+  --text-dim:#8b93a1;
+  --text-faint:#525a66;
+  --signal:#ff7a1a;
+  --signal-dim:rgba(255,122,26,.13);
+  --signal-line:rgba(255,122,26,.35);
+  --ok:#35d2a4;
+  --ok-dim:rgba(53,210,164,.12);
+  --warn:#f0b93d;
+  --warn-dim:rgba(240,185,61,.12);
+  --danger:#ff5470;
+  --danger-dim:rgba(255,84,112,.12);
+  --radius:10px;
+  --radius-lg:14px;
+  --shadow:0 20px 50px rgba(0,0,0,.45);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,122,26,.05), transparent),
+    var(--ink);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:18px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--signal-dim);color:var(--text);}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
+.mono{font-family:'JetBrains Mono',monospace;}
+h1,h2,h3,.display{font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.01em;}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;}
+
+/* ==============================================
+   APP SHELL
+   ============================================== */
+.app{max-width:1120px;width:100%;}
+
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 4px 18px;margin-bottom:22px;border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer;}
+.brand-mark{
+  width:34px;height:34px;border:1px solid var(--signal-line);
+  display:flex;align-items:center;justify-content:center;
+  clip-path:polygon(0 0,100% 0,100% 75%,75% 100%,0 100%);
+  background:var(--signal-dim);color:var(--signal);
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:17px;
+}
+.brand-text{font-size:19px;font-weight:700;font-family:'Rajdhani',sans-serif;letter-spacing:.02em;}
+.brand-text span{color:var(--signal);}
+.brand-sub{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.14em;margin-top:-2px;}
+
+.topbar-right{display:flex;align-items:center;gap:12px;}
+
+.user-chip{
+  display:none;align-items:center;gap:10px;cursor:pointer;
+  padding:5px 14px 5px 6px;border:1px solid var(--line);border-radius:40px;
+  background:var(--panel);transition:border-color .2s var(--ease);
+}
+.user-chip:hover{border-color:var(--signal-line);}
+.user-chip.show{display:flex;}
+.avatar{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(150deg,#22262e,#171a20);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  overflow:hidden;color:var(--signal);
+}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.chip-meta{display:flex;flex-direction:column;line-height:1.2;}
+.chip-name{font-size:13px;font-weight:600;}
+.chip-rating{font-size:10.5px;color:var(--text-dim);}
+
+/* buttons */
+.btn{
+  padding:9px 18px;border:1px solid transparent;border-radius:8px;
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;
+  transition:all .18s var(--ease);display:inline-flex;align-items:center;gap:7px;
+  white-space:nowrap;
+}
+.btn-primary{background:var(--signal);color:#1a0d02;}
+.btn-primary:hover{background:#ff8c3d;transform:translateY(-1px);}
+.btn-outline{background:transparent;border-color:var(--line);color:var(--text-dim);}
+.btn-outline:hover{border-color:var(--signal-line);color:var(--text);}
+.btn-ghost{background:transparent;color:var(--text-dim);}
+.btn-ghost:hover{color:var(--text);}
+.btn-danger-outline{background:transparent;border-color:rgba(255,84,112,.3);color:var(--danger);}
+.btn-danger-outline:hover{background:var(--danger-dim);}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.btn-block{width:100%;justify-content:center;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+/* ==============================================
+   AUTH SCREEN
+   ============================================== */
+.auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:72vh;}
+.auth-box{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:38px 38px 30px;max-width:390px;width:100%;box-shadow:var(--shadow);position:relative;
+}
+.auth-box::before{
+  content:'';position:absolute;top:0;left:24px;right:24px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--signal-line),transparent);
+}
+.auth-eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--signal);text-align:center;margin-bottom:10px;}
+.auth-box h2{text-align:center;font-size:24px;margin-bottom:6px;}
+.auth-sub{text-align:center;color:var(--text-dim);font-size:13.5px;margin-bottom:24px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.field input, .field textarea, .field select{
+  width:100%;padding:10px 13px;background:var(--ink);border:1px solid var(--line);
+  border-radius:7px;color:var(--text);font-size:14px;font-family:inherit;transition:border-color .18s var(--ease);
+}
+.field textarea{resize:vertical;min-height:64px;}
+.field input:focus, .field textarea:focus, .field select:focus{outline:none;border-color:var(--signal-line);}
+.field-hint{font-size:11px;color:var(--text-faint);margin-top:4px;}
+#registerFields{display:none;}
+.notice{margin-top:12px;padding:10px 13px;border-radius:7px;font-size:12.5px;text-align:left;border:1px solid;}
+.notice-warn{background:var(--warn-dim);border-color:rgba(240,185,61,.25);color:var(--warn);display:none;}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;}
+.divider hr{flex:1;border:none;border-top:1px solid var(--line);}
+.divider span{color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:.08em;}
+.btn-google{width:100%;justify-content:center;background:#f4f4f4;color:#1c1c1c;padding:10px;}
+.btn-google:hover{background:#fff;}
+.auth-footer{text-align:center;margin-top:16px;font-size:12.5px;color:var(--text-dim);}
+.auth-footer button{background:none;border:none;color:var(--signal);font-weight:600;cursor:pointer;font-size:12.5px;}
+
+/* ==============================================
+   SAFETY BANNER (persistent, real substance)
+   ============================================== */
+.safety-banner{
+  border:1px solid var(--line);border-left:2px solid var(--signal);border-radius:8px;
+  padding:12px 16px;margin-bottom:22px;display:flex;gap:12px;align-items:flex-start;
+  background:var(--panel);font-size:12.5px;color:var(--text-dim);
+}
+.safety-banner .sb-mark{color:var(--signal);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;flex-shrink:0;}
+.safety-banner b{color:var(--text);}
+.safety-banner a{color:var(--signal);text-decoration:none;cursor:pointer;}
+.safety-banner a:hover{text-decoration:underline;}
+
+/* ==============================================
+   DASHBOARD LAYOUT
+   ============================================== */
+.dashboard{display:none;}
+.dashboard.active{display:block;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;
+}
+.stat .num{font-size:24px;font-weight:700;font-family:'Rajdhani',sans-serif;}
+.stat .num.signal{color:var(--signal);}
+.stat .lbl{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+.tab{
+  padding:10px 4px;margin-right:22px;font-size:13.5px;font-weight:600;color:var(--text-faint);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .18s var(--ease);
+  position:relative;top:1px;
+}
+.tab:hover{color:var(--text-dim);}
+.tab.active{color:var(--text);border-bottom-color:var(--signal);}
+.tab .count{font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);margin-left:4px;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+/* ==============================================
+   FEED / LISTINGS
+   ============================================== */
+.feed-toolbar{display:flex;gap:10px;margin-bottom:16px;}
+.feed-toolbar input{flex:1;}
+
+.listing-grid{display:flex;flex-direction:column;gap:11px;}
+.listing{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;position:relative;transition:border-color .18s var(--ease);
+}
+.listing:hover{border-color:var(--signal-line);}
+.listing::before{
+  content:attr(data-id);position:absolute;top:14px;right:16px;
+  font-family:'JetBrains Mono';font-size:10.5px;color:var(--text-faint);
+}
+.listing-head{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.listing-owner{font-size:13.5px;font-weight:600;}
+.listing-rating{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono';}
+.badge{
+  padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;border:1px solid;
+}
+.badge-open{background:var(--ok-dim);color:var(--ok);border-color:rgba(53,210,164,.25);}
+.badge-matched{background:var(--warn-dim);color:var(--warn);border-color:rgba(240,185,61,.25);}
+.badge-completed{background:var(--signal-dim);color:var(--signal);border-color:var(--signal-line);}
+.badge-closed{background:transparent;color:var(--text-faint);border-color:var(--line);}
+
+.listing-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px;}
+.listing-col-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin-bottom:4px;}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;}
+.tag{
+  background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;
+  padding:3px 9px;font-size:12px;color:var(--text-dim);
+}
+.listing-note{font-size:12.5px;color:var(--text-dim);margin-bottom:12px;font-style:italic;}
+.listing-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.listing-time{font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono';}
+
+.empty-state{
+  text-align:center;padding:50px 20px;color:var(--text-faint);
+  border:1px dashed var(--line);border-radius:var(--radius);font-size:13.5px;
+}
+
+/* ==============================================
+   NEW LISTING FORM
+   ============================================== */
+.form-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:26px;max-width:520px;
+}
+.form-card h3{font-size:18px;margin-bottom:4px;}
+.form-card .form-sub{font-size:12.5px;color:var(--text-dim);margin-bottom:20px;}
+
+/* ==============================================
+   OFFERS
+   ============================================== */
+.offer-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:15px 18px;margin-bottom:10px;
+}
+.offer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.offer-msg{font-size:13px;color:var(--text-dim);margin-bottom:12px;}
+.offer-actions{display:flex;gap:8px;}
+
+/* ==============================================
+   TRADE ROOM
+   ============================================== */
+.room{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:24px;
+}
+.room-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+.room-parties{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:600;}
+.room-parties .vs{color:var(--text-faint);font-size:11px;font-family:'JetBrains Mono';}
+
+.checklist-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+@media (max-width:680px){.checklist-cols{grid-template-columns:1fr;}}
+.checklist-panel{border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+.checklist-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:12px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line-soft);}
+.check-item:last-child{border-bottom:none;}
+.check-item input{margin-top:2px;accent-color:var(--signal);width:15px;height:15px;flex-shrink:0;}
+.check-item.done span{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--line);}
+.check-item.locked{opacity:.45;cursor:not-allowed;}
+
+.room-safety{
+  background:var(--danger-dim);border:1px solid rgba(255,84,112,.25);border-radius:var(--radius);
+  padding:13px 16px;margin-bottom:20px;font-size:12.5px;color:var(--text-dim);
+}
+.room-safety b{color:var(--danger);}
+
+.room-complete-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.progress-note{font-size:12px;color:var(--text-faint);font-family:'JetBrains Mono';}
+
+.completed-strip{
+  text-align:center;padding:20px;background:var(--signal-dim);border:1px solid var(--signal-line);
+  border-radius:var(--radius);margin-bottom:18px;
+}
+.completed-strip .big{font-size:16px;font-weight:700;color:var(--signal);font-family:'Rajdhani',sans-serif;}
+
+/* ==============================================
+   MODALS
+   ============================================== */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(6,7,9,.75);backdrop-filter:blur(6px);
+  z-index:999;justify-content:center;align-items:center;padding:20px;
+}
+.modal-overlay.active{display:flex;}
+.modal{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px;max-width:420px;width:100%;box-shadow:var(--shadow);max-height:88vh;overflow-y:auto;
+}
+.modal-close{float:right;background:none;border:none;color:var(--text-faint);font-size:20px;cursor:pointer;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal h3{margin-bottom:16px;font-size:18px;}
+.star-row{display:flex;gap:6px;justify-content:center;margin:16px 0;}
+.star{font-size:30px;color:var(--line);cursor:pointer;transition:color .15s var(--ease);}
+.star.active,.star.hover{color:var(--signal);}
+
+/* ==============================================
+   TOAST
+   ============================================== */
+.toast{
+  position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:8px;
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);
+  display:none;z-index:1000;max-width:340px;font-size:13px;
+  animation:slideUp .25s var(--ease);
+}
+.toast.show{display:block;}
+.toast.success{border-left:3px solid var(--ok);}
+.toast.error{border-left:3px solid var(--danger);}
+.toast.info{border-left:3px solid var(--signal);}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
+@media (max-width:768px){
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .listing-cols{grid-template-columns:1fr;}
+  .topbar{flex-wrap:wrap;gap:10px;}
+  .auth-box{padding:28px 22px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important;}
+}
+</style>
 </head>
 <body>
-    
-    <!-- TOAST -->
-    <div id="toast" class="toast"></div>
-    
-    <!-- PROFILE MODAL -->
-    <div id="profileModal" class="modal-overlay">
-        <div class="modal">
-            <button class="close" onclick="closeProfileModal()">✕</button>
-            <h3>👤 Profil Düzenle</h3>
-            <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">
-                <div class="avatar" id="modalAvatar" style="width:80px;height:80px;font-size:32px;margin-bottom:8px;">?</div>
-                <button class="btn btn-outline btn-sm" onclick="changeAvatar()">📷 Fotoğraf Değiştir</button>
-            </div>
-            <div class="form-group">
-                <label>Kullanıcı Adı</label>
-                <input type="text" id="editDisplayName" placeholder="Yeni kullanıcı adı" />
-            </div>
-            <button class="btn btn-primary btn-block" onclick="updateProfile()">💾 Kaydet</button>
-            <button class="btn btn-danger btn-block" style="margin-top:8px;" onclick="logout();closeProfileModal();">🚪 Çıkış Yap</button>
-        </div>
+
+<div id="toast" class="toast"></div>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+    <h3>Profil</h3>
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;">
+      <div class="avatar" id="modalAvatar" style="width:64px;height:64px;font-size:24px;margin-bottom:10px;">B</div>
+      <button class="btn btn-outline btn-sm" onclick="changeAvatar()">Simgeyi Değiştir</button>
     </div>
-    
-    <!-- APP -->
-    <div class="app">
-        
-        <!-- HEADER -->
-        <header class="header">
-            <div class="logo" onclick="navigateTo('dashboard')">
-                <span class="logo-icon">◈</span>
-                <span class="logo-text">Valo<span style="color:var(--primary);">Trade</span></span>
-            </div>
-            <div class="header-right">
-                <div id="userBadge" class="user-badge" onclick="openProfileModal()">
-                    <span class="avatar" id="userAvatar">?</span>
-                    <span id="userNameDisplay">Kullanıcı</span>
-                </div>
-                <button id="authBtn" class="btn btn-primary" onclick="handleAuth()">🔐 Giriş</button>
-            </div>
-        </header>
-        
-        <!-- SECURITY BANNER -->
-        <div class="security-banner">
-            <span>🔒</span>
-            <span><strong>AES-256</strong> ile şifreleniyor. Bilgileriniz güvende.</span>
-        </div>
-        
-        <!-- AUTH SCREEN -->
-        <div id="authScreen" class="auth-screen">
-            <div class="auth-box">
-                <div class="icon-top">◈</div>
-                <h2 id="authTitle">Giriş Yap</h2>
-                <p class="sub" id="authSub">Hesabına giriş yaparak başla</p>
-                <div id="authForm">
-                    <div class="form-group"><label>E-posta</label><input type="email" id="authEmail" placeholder="ornek@email.com" /></div>
-                    <div class="form-group"><label>Şifre</label><input type="password" id="authPassword" placeholder="••••••••" /></div>
-                    <div id="registerFields">
-                        <div class="form-group"><label>Şifre Tekrar</label><input type="password" id="authPassword2" placeholder="••••••••" /></div>
-                    </div>
-                    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-                        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="flex:1; justify-content:center;">Giriş Yap</button>
-                        <button class="btn btn-outline" id="authToggleBtn" onclick="toggleAuthMode()" style="flex:1; justify-content:center;">Kayıt Ol</button>
-                    </div>
-                    <div class="auth-divider"><hr /><span>veya</span><hr /></div>
-                    <button class="btn btn-google" onclick="loginWithGoogle()">
-                        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.97-5.97z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"/></svg>
-                        Google ile Giriş
-                    </button>
-                </div>
-                <div id="emailVerifyNotice">📧 E-postanı doğrula! Gelen kutunu kontrol et.</div>
-                <div class="auth-footer"><span id="authToggleText">Hesabın yok mu? <button onclick="toggleAuthMode()">Kayıt Ol</button></span></div>
-            </div>
-        </div>
-        
-        <!-- DASHBOARD -->
-        <div id="dashboard" class="dashboard">
-            
-            <!-- STATS -->
-            <div class="stats">
-                <div class="stat-card"><div class="num" id="statTrades">0</div><div class="lbl">Toplam Takas</div></div>
-                <div class="stat-card"><div class="num" id="statOpen">0</div><div class="lbl">Açık Takas</div></div>
-                <div class="stat-card"><div class="num" id="statCompleted">0</div><div class="lbl">Tamamlanan</div></div>
-            </div>
-            
-            <!-- SUCCESS CENTER -->
-            <div class="success-center">
-                <div class="icon">🏆</div>
-                <h2>Başarılı Takaslar</h2>
-                <p>Güvenli ve hızlı takas deneyimi. <span id="successCount">0</span> başarılı takas tamamlandı.</p>
-            </div>
-            
-            <!-- CONTENT -->
-            <div class="content">
-                
-                <!-- PAGE: TRADES -->
-                <div id="pageTrades" class="page active">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-                        <h3 style="color:var(--primary); font-weight:700;">📋 Takaslarım</h3>
-                        <button class="btn btn-primary" onclick="showNewTrade()">➕ Yeni Takas</button>
-                    </div>
-                    <div id="tradeList" class="trade-list"></div>
-                </div>
-                
-                <!-- PAGE: NEW TRADE -->
-                <div id="pageNewTrade" class="page" style="display:none;">
-                    <button class="btn btn-outline btn-sm" onclick="showTrades()" style="margin-bottom:16px;">← Geri</button>
-                    <div class="new-trade-box">
-                        <h3 style="color:var(--primary); font-weight:700; margin-bottom:16px;">➕ Yeni Takas Oluştur</h3>
-                        <div class="form-group">
-                            <label>Takas Başlığı</label>
-                            <input type="text" id="tradeTitle" placeholder="Örn: Vandal + Phantom takası" />
-                        </div>
-                        <div class="form-group">
-                            <label>Açıklama</label>
-                            <input type="text" id="tradeDesc" placeholder="Takas hakkında kısa bilgi" />
-                        </div>
-                        <button class="btn btn-primary btn-block" onclick="createTrade()">🚀 Takas Oluştur</button>
-                    </div>
-                </div>
-                
-                <!-- PAGE: TRADE ROOM -->
-                <div id="pageTradeRoom" class="page" style="display:none;">
-                    <button class="btn btn-outline btn-sm" onclick="closeTradeRoom()" style="margin-bottom:16px;">← Geri</button>
-                    <div id="tradeRoomContainer"></div>
-                </div>
-                
-            </div>
-        </div>
-        
+    <div class="field"><label>Kullanıcı adı</label><input type="text" id="editDisplayName" placeholder="Kullanıcı adı"></div>
+    <button class="btn btn-primary btn-block" onclick="updateProfile()">Kaydet</button>
+    <button class="btn btn-danger-outline btn-block" style="margin-top:8px;" onclick="logout();closeModal('profileModal');">Çıkış yap</button>
+  </div>
+</div>
+
+<!-- OFFER MODAL -->
+<div id="offerModal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('offerModal')">✕</button>
+    <h3>Teklif Gönder</h3>
+    <p class="form-sub" id="offerListingSummary" style="margin-bottom:16px;color:var(--text-dim);font-size:12.5px;"></p>
+    <div class="field">
+      <label>Mesajın</label>
+      <textarea id="offerMessage" placeholder="Elindeki ile karşı tarafın istediği eşleşiyorsa kısaca açıkla..."></textarea>
     </div>
-    
-    <!-- ========================================== -->
-    <!-- JAVASCRIPT -->
-    <!-- ========================================== -->
-    <script>
-        // ==========================================
-        // FIREBASE CONFIG
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyA2Wc0qiBY8tV_6VsPMm0RewzSXMT7f48s",
-            authDomain: "project-52b68460-83e4-4fcf-aa0.firebaseapp.com",
-            projectId: "project-52b68460-83e4-4fcf-aa0",
-            storageBucket: "project-52b68460-83e4-4fcf-aa0.firebasestorage.app",
-            messagingSenderId: "447150523512",
-            appId: "1:447150523512:web:077e53b627f63a86e0998d",
-            measurementId: "G-BXMHVDH7RD"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        // ==========================================
-        // STATE
-        // ==========================================
-        let currentUser = null;
-        let myTrades = [];
-        let currentRoomId = null;
-        let unsubscribeRoom = null;
-        let isLoginMode = true;
-        
-        // ==========================================
-        // DOM REFS
-        // ==========================================
-        const authScreen = document.getElementById('authScreen');
-        const dashboard = document.getElementById('dashboard');
-        const authBtn = document.getElementById('authBtn');
-        const userBadge = document.getElementById('userBadge');
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        const userAvatar = document.getElementById('userAvatar');
-        const toast = document.getElementById('toast');
-        const successCount = document.getElementById('successCount');
-        
-        // ==========================================
-        // AUTH
-        // ==========================================
-        function handleAuth() {
-            if (currentUser) { logout(); } 
-            else { authScreen.style.display = 'flex'; dashboard.classList.remove('active'); }
+    <button class="btn btn-primary btn-block" onclick="sendOffer()">Teklifi Gönder</button>
+  </div>
+</div>
+
+<!-- RATING MODAL -->
+<div id="ratingModal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('ratingModal')">✕</button>
+    <h3>Takas Deneyimini Değerlendir</h3>
+    <p class="form-sub" id="ratingTargetName" style="color:var(--text-dim);font-size:12.5px;"></p>
+    <div class="star-row" id="starRow">
+      <span class="star" data-v="1">★</span>
+      <span class="star" data-v="2">★</span>
+      <span class="star" data-v="3">★</span>
+      <span class="star" data-v="4">★</span>
+      <span class="star" data-v="5">★</span>
+    </div>
+    <div class="field"><label>Kısa not (opsiyonel)</label><textarea id="ratingComment" placeholder="Süreç nasıl geçti?"></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="submitRating()">Gönder</button>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="reportModal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
+    <h3>Kullanıcıyı Bildir</h3>
+    <p class="form-sub" id="reportTargetName" style="color:var(--text-dim);font-size:12.5px;margin-bottom:14px;"></p>
+    <div class="field">
+      <label>Sebep</label>
+      <select id="reportReason">
+        <option>Hesap bilgisi / şifre istedi</option>
+        <option>Anlaşma sonrası iletişimi kesti</option>
+        <option>Sahte envanter / yanıltıcı ilan</option>
+        <option>Taciz veya hakaret</option>
+        <option>Diğer</option>
+      </select>
+    </div>
+    <div class="field"><label>Detay</label><textarea id="reportDetail" placeholder="Ne oldu, kısaca anlat..."></textarea></div>
+    <button class="btn btn-danger-outline btn-block" onclick="submitReport()">Bildirimi Gönder</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand" onclick="goDashboardHome()">
+      <div class="brand-mark">V</div>
+      <div>
+        <div class="brand-text">Valo<span>Trade</span></div>
+        <div class="brand-sub">Envanter Eşleştirme Panosu</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div id="userChip" class="user-chip" onclick="openModal('profileModal')">
+        <span class="avatar" id="userAvatar">B</span>
+        <div class="chip-meta">
+          <span class="chip-name" id="userNameDisplay">—</span>
+          <span class="chip-rating" id="userRatingDisplay">henüz puan yok</span>
+        </div>
+      </div>
+      <button id="authBtn" class="btn btn-outline btn-sm" onclick="handleAuth()">Giriş</button>
+    </div>
+  </header>
+
+  <!-- SAFETY BANNER -->
+  <div class="safety-banner">
+    <span class="sb-mark">i</span>
+    <span><b>ValoTrade hesap şifreni asla istemez, göstermez veya saklamaz.</b> Bu pano yalnızca eşleştirme ve iletişim içindir. Devir işlemini yalnızca resmi/güvenilir bir kanal üzerinden yürüt; hiçbir takas ortağıyla şifreni paylaşma. <a onclick="openSafetyGuide()">Güvenli takas rehberi →</a></span>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-box">
+      <div class="auth-eyebrow">Erişim</div>
+      <h2 id="authTitle">Giriş Yap</h2>
+      <p class="auth-sub" id="authSub">Panoyu görmek için hesabına giriş yap</p>
+      <div class="field"><label>E-posta</label><input type="email" id="authEmail" placeholder="ornek@email.com"></div>
+      <div class="field"><label>Şifre</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+      <div id="registerFields">
+        <div class="field"><label>Şifre (tekrar)</label><input type="password" id="authPassword2" placeholder="••••••••"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()" style="flex:1;justify-content:center;">Giriş Yap</button>
+        <button class="btn btn-outline" id="authToggleBtn" onclick="toggleAuthMode()" style="flex:1;justify-content:center;">Kayıt Ol</button>
+      </div>
+      <div class="divider"><hr><span>veya</span><hr></div>
+      <button class="btn btn-google" onclick="loginWithGoogle()">
+        <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.97-5.97z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"></path></svg>
+        Google ile devam et
+      </button>
+      <div class="notice notice-warn" id="emailVerifyNotice">E-postanı doğrula — gelen kutunu kontrol et.</div>
+      <div class="auth-footer"><span id="authToggleText">Hesabın yok mu? <button onclick="toggleAuthMode()">Kayıt ol</button></span></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="dashboard">
+
+    <div class="stats-row">
+      <div class="stat"><div class="num signal" id="statOpen">0</div><div class="lbl">Açık İlanım</div></div>
+      <div class="stat"><div class="num" id="statOffers">0</div><div class="lbl">Bekleyen Teklif</div></div>
+      <div class="stat"><div class="num" id="statRooms">0</div><div class="lbl">Aktif Takas Odası</div></div>
+      <div class="stat"><div class="num" id="statCompleted">0</div><div class="lbl">Tamamlanan Takas</div></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="feed" onclick="switchTab('feed')">Pano</div>
+      <div class="tab" data-tab="new" onclick="switchTab('new')">Yeni İlan</div>
+      <div class="tab" data-tab="offers" onclick="switchTab('offers')">Tekliflerim <span class="count" id="offerCountTab"></span></div>
+      <div class="tab" data-tab="rooms" onclick="switchTab('rooms')">Takas Odalarım</div>
+    </div>
+
+    <!-- FEED -->
+    <div id="page-feed" class="page active">
+      <div class="feed-toolbar">
+        <input type="text" id="feedSearch" placeholder="Etikete göre ara (örn. Reaver, Prime, Elderflame)..." oninput="renderFeed()">
+      </div>
+      <div class="listing-grid" id="feedList"></div>
+    </div>
+
+    <!-- NEW LISTING -->
+    <div id="page-new" class="page">
+      <div class="form-card">
+        <h3>İlan Oluştur</h3>
+        <p class="form-sub">Sadece envanterini tarif et. Hesap bilgisi, kullanıcı adı veya şifre istenmez ve alınmaz.</p>
+        <div class="field">
+          <label>Elimdekiler</label>
+          <input type="text" id="newHave" placeholder="Reaver Vandal, Prime Phantom, ... (virgülle ayır)">
+        </div>
+        <div class="field">
+          <label>Aradıklarım</label>
+          <input type="text" id="newWant" placeholder="Elderflame Operator, RGX Judge, ... (virgülle ayır)">
+        </div>
+        <div class="field">
+          <label>Not (opsiyonel)</label>
+          <textarea id="newNote" placeholder="Ek koşullar, tercih ettiğin transfer yöntemi vb."></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="createListing()">İlanı Yayınla</button>
+      </div>
+    </div>
+
+    <!-- OFFERS -->
+    <div id="page-offers" class="page">
+      <h3 style="font-size:14px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Gelen Teklifler</h3>
+      <div id="incomingOffers" style="margin-bottom:26px;"></div>
+      <h3 style="font-size:14px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Gönderdiklerim</h3>
+      <div id="outgoingOffers"></div>
+    </div>
+
+    <!-- ROOMS -->
+    <div id="page-rooms" class="page">
+      <div id="roomList"></div>
+    </div>
+
+    <!-- ROOM DETAIL -->
+    <div id="page-room-detail" class="page"></div>
+
+  </div>
+</div>
+
+<script>
+// ==================================================
+// FIREBASE CONFIG (proje sahibinin mevcut projesi)
+// ==================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyA2Wc0qiBY8tV_6VsPMm0RewzSXMT7f48s",
+  authDomain: "project-52b68460-83e4-4fcf-aa0.firebaseapp.com",
+  projectId: "project-52b68460-83e4-4fcf-aa0",
+  storageBucket: "project-52b68460-83e4-4fcf-aa0.firebasestorage.app",
+  messagingSenderId: "447150523512",
+  appId: "1:447150523512:web:077e53b627f63a86e0998d",
+  measurementId: "G-BXMHVDH7RD"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ==================================================
+// STATE
+// ==================================================
+let currentUser = null;
+let currentUserDoc = null;
+let isLoginMode = true;
+let allListings = [];
+let myIncomingOffers = [];
+let myOutgoingOffers = [];
+let myRooms = [];
+let activeRoomId = null;
+let unsubRoom = null;
+let selectedListingForOffer = null;
+let ratingTargetUid = null;
+let ratingRoomId = null;
+let selectedStars = 0;
+let reportTargetUid = null;
+
+const CHECKLIST_STEPS = [
+  { id:'profile',  label:'Karşı tarafın profilini ve puanını inceledim' },
+  { id:'terms',    label:'Takas şartlarını (ne karşılığında ne) yazılı olarak netleştirdik' },
+  { id:'channel',  label:'Devri yalnızca resmi/güvenilir bir kanal üzerinden yapmayı kabul ettik' },
+  { id:'done',     label:'Kendi tarafımdaki devir işlemini tamamladım' }
+];
+
+// ==================================================
+// DOM
+// ==================================================
+const authScreen = document.getElementById('authScreen');
+const dashboard = document.getElementById('dashboard');
+const authBtn = document.getElementById('authBtn');
+const userChip = document.getElementById('userChip');
+const userNameDisplay = document.getElementById('userNameDisplay');
+const userRatingDisplay = document.getElementById('userRatingDisplay');
+const userAvatar = document.getElementById('userAvatar');
+const toast = document.getElementById('toast');
+
+// ==================================================
+// AUTH
+// ==================================================
+function handleAuth(){ if(currentUser){ logout(); } else { showAuthScreen(); } }
+
+function toggleAuthMode(){
+  isLoginMode = !isLoginMode;
+  document.getElementById('authTitle').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+  document.getElementById('authSub').textContent = isLoginMode ? 'Panoyu görmek için hesabına giriş yap' : 'Yeni hesap oluştur';
+  document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+  document.getElementById('authToggleBtn').textContent = isLoginMode ? 'Kayıt Ol' : 'Giriş Yap';
+  document.getElementById('registerFields').style.display = isLoginMode ? 'none' : 'block';
+  document.getElementById('authToggleText').innerHTML = isLoginMode
+    ? 'Hesabın yok mu? <button onclick="toggleAuthMode()">Kayıt ol</button>'
+    : 'Zaten hesabın var mı? <button onclick="toggleAuthMode()">Giriş yap</button>';
+}
+
+function submitAuth(){
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPassword').value;
+  const pass2 = document.getElementById('authPassword2').value;
+  if(!email || !pass){ showToast('Tüm alanları doldur.', 'error'); return; }
+
+  if(isLoginMode){
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(cred => {
+        if(!cred.user.emailVerified){
+          showToast('E-postanı doğrula.', 'error');
+          document.getElementById('emailVerifyNotice').style.display = 'block';
+          auth.signOut();
+          return;
         }
-        
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('authTitle').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
-            document.getElementById('authSub').textContent = isLoginMode ? 'Hesabına giriş yap' : 'Yeni hesap oluştur';
-            document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
-            document.getElementById('authToggleBtn').textContent = isLoginMode ? 'Kayıt Ol' : 'Giriş Yap';
-            document.getElementById('registerFields').style.display = isLoginMode ? 'none' : 'block';
-            document.getElementById('authToggleText').innerHTML = isLoginMode ?
-                'Hesabın yok mu? <button onclick="toggleAuthMode()">Kayıt Ol</button>' :
-                'Zaten hesabın var mı? <button onclick="toggleAuthMode()">Giriş Yap</button>';
+        showToast('Hoş geldin.', 'success');
+      })
+      .catch(e => showToast(friendlyError(e), 'error'));
+  } else {
+    if(pass !== pass2){ showToast('Şifreler eşleşmiyor.', 'error'); return; }
+    if(pass.length < 6){ showToast('Şifre en az 6 karakter olmalı.', 'error'); return; }
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(cred => {
+        cred.user.sendEmailVerification();
+        cred.user.updateProfile({ displayName: email.split('@')[0] });
+        return db.collection('users').doc(cred.user.uid).set(newUserDoc(email, email.split('@')[0]));
+      })
+      .then(() => {
+        showToast('Kayıt başarılı. E-postanı doğrula.', 'success');
+        document.getElementById('emailVerifyNotice').style.display = 'block';
+        auth.signOut();
+        toggleAuthMode();
+      })
+      .catch(e => showToast(friendlyError(e), 'error'));
+  }
+}
+
+function loginWithGoogle(){
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .then(result => {
+      const user = result.user;
+      return db.collection('users').doc(user.uid).get().then(doc => {
+        if(!doc.exists){
+          return db.collection('users').doc(user.uid).set(newUserDoc(user.email, user.displayName || user.email.split('@')[0]));
         }
-        
-        function submitAuth() {
-            const email = document.getElementById('authEmail').value.trim();
-            const pass = document.getElementById('authPassword').value;
-            const pass2 = document.getElementById('authPassword2').value;
-            if (!email || !pass) { showToast('Tüm alanları doldur!', 'error'); return; }
-            
-            if (isLoginMode) {
-                auth.signInWithEmailAndPassword(email, pass)
-                    .then(cred => {
-                        if (!cred.user.emailVerified) {
-                            showToast('E-postanı doğrula!', 'error');
-                            document.getElementById('emailVerifyNotice').style.display = 'block';
-                            auth.signOut();
-                            return;
-                        }
-                        currentUser = cred.user;
-                        updateUI(currentUser);
-                        showDashboard();
-                        showToast('Hoş geldin!', 'success');
-                        loadTrades();
-                    })
-                    .catch(e => showToast('Hata: ' + e.message, 'error'));
-            } else {
-                if (pass !== pass2) { showToast('Şifreler eşleşmiyor!', 'error'); return; }
-                if (pass.length < 6) { showToast('Şifre en az 6 karakter!', 'error'); return; }
-                
-                auth.createUserWithEmailAndPassword(email, pass)
-                    .then(cred => {
-                        cred.user.sendEmailVerification();
-                        cred.user.updateProfile({ displayName: email.split('@')[0] });
-                        db.collection('users').doc(cred.user.uid).set({
-                            email: email,
-                            displayName: email.split('@')[0],
-                            createdAt: new Date().toISOString(),
-                            trades: 0,
-                            completed: 0
-                        });
-                        showToast('Kayıt başarılı! E-postanı doğrula.', 'success');
-                        document.getElementById('emailVerifyNotice').style.display = 'block';
-                        auth.signOut();
-                        toggleAuthMode();
-                    })
-                    .catch(e => showToast('Hata: ' + e.message, 'error'));
-            }
-        }
-        
-        function loginWithGoogle() {
-            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-                .then(result => {
-                    const user = result.user;
-                    db.collection('users').doc(user.uid).get().then(doc => {
-                        if (!doc.exists) {
-                            db.collection('users').doc(user.uid).set({
-                                email: user.email,
-                                displayName: user.displayName || user.email.split('@')[0],
-                                createdAt: new Date().toISOString(),
-                                trades: 0,
-                                completed: 0
-                            });
-                        }
-                    });
-                    currentUser = user;
-                    updateUI(user);
-                    showDashboard();
-                    showToast('Google ile giriş başarılı!', 'success');
-                    loadTrades();
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function logout() {
-            if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
-            auth.signOut().then(() => {
-                currentUser = null;
-                currentRoomId = null;
-                updateUI(null);
-                showAuthScreen();
-                showToast('Çıkış yapıldı', 'info');
-            });
-        }
-        
-        // ==========================================
-        // AUTH STATE
-        // ==========================================
-        auth.onAuthStateChanged(user => {
-            if (user && user.emailVerified) {
-                currentUser = user;
-                updateUI(user);
-                showDashboard();
-                loadTrades();
-            } else if (user && !user.emailVerified) {
-                document.getElementById('emailVerifyNotice').style.display = 'block';
-                showToast('E-postanı doğrula!', 'error');
-                auth.signOut();
-            } else {
-                currentUser = null;
-                updateUI(null);
-                showAuthScreen();
-            }
-        });
-        
-        // ==========================================
-        // UI
-        // ==========================================
-        function updateUI(user) {
-            if (user) {
-                userBadge.classList.add('show');
-                authBtn.textContent = '🚪 Çıkış';
-                const displayName = user.displayName || user.email;
-                userNameDisplay.textContent = displayName;
-                userAvatar.textContent = displayName[0].toUpperCase();
-                
-                // Update modal avatar
-                document.getElementById('modalAvatar').textContent = displayName[0].toUpperCase();
-                document.getElementById('editDisplayName').value = displayName;
-                document.getElementById('profileName').textContent = displayName;
-                document.getElementById('profileEmail').textContent = user.email;
-            } else {
-                userBadge.classList.remove('show');
-                authBtn.textContent = '🔐 Giriş';
-            }
-        }
-        
-        function showDashboard() {
-            authScreen.style.display = 'none';
-            dashboard.classList.add('active');
-        }
-        
-        function showAuthScreen() {
-            authScreen.style.display = 'flex';
-            dashboard.classList.remove('active');
-        }
-        
-        function showTrades() {
-            document.getElementById('pageNewTrade').style.display = 'none';
-            document.getElementById('pageTradeRoom').style.display = 'none';
-            document.getElementById('pageTrades').style.display = 'block';
-            renderTrades();
-        }
-        
-        function showNewTrade() {
-            document.getElementById('pageTrades').style.display = 'none';
-            document.getElementById('pageTradeRoom').style.display = 'none';
-            document.getElementById('pageNewTrade').style.display = 'block';
-        }
-        
-        function showTradeRoom() {
-            document.getElementById('pageTrades').style.display = 'none';
-            document.getElementById('pageNewTrade').style.display = 'none';
-            document.getElementById('pageTradeRoom').style.display = 'block';
-        }
-        
-        function closeTradeRoom() {
-            if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
-            currentRoomId = null;
-            showTrades();
-        }
-        
-        function navigateTo(section) {
-            if (section === 'dashboard' && currentUser) showDashboard();
-        }
-        
-        // ==========================================
-        // PROFILE MODAL
-        // ==========================================
-        function openProfileModal() {
-            if (!currentUser) return;
-            document.getElementById('profileModal').classList.add('active');
-        }
-        
-        function closeProfileModal() {
-            document.getElementById('profileModal').classList.remove('active');
-        }
-        
-        function changeAvatar() {
-            // Emoji avatar değiştirme (basit demo)
-            const emojis = ['😀', '😎', '🔥', '⚡', '🎯', '🏆', '💎', '🚀'];
-            const current = document.getElementById('modalAvatar').textContent;
-            let newEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            while (newEmoji === current && emojis.length > 1) {
-                newEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            }
-            document.getElementById('modalAvatar').textContent = newEmoji;
-            userAvatar.textContent = newEmoji;
-            showToast('Avatar güncellendi!', 'success');
-        }
-        
-        function updateProfile() {
-            if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
-            
-            const newName = document.getElementById('editDisplayName').value.trim();
-            if (!newName) { showToast('İsim boş olamaz!', 'error'); return; }
-            
-            db.collection('users').where('displayName', '==', newName).get()
-                .then(snap => {
-                    if (!snap.empty && snap.docs[0].id !== currentUser.uid) {
-                        showToast('Bu isim zaten kullanılıyor!', 'error');
-                        return;
-                    }
-                    currentUser.updateProfile({ displayName: newName });
-                    db.collection('users').doc(currentUser.uid).update({ displayName: newName });
-                    updateUI(currentUser);
-                    showToast('Profil güncellendi!', 'success');
-                    closeProfileModal();
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        // ==========================================
-        // TOAST
-        // ==========================================
-        function showToast(msg, type = 'info') {
-            toast.textContent = msg;
-            toast.className = 'toast ' + type + ' show';
-            clearTimeout(toast._t);
-            toast._t = setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-        
-        // ==========================================
-        // ENCRYPTION
-        // ==========================================
-        function encryptData(data) {
-            return CryptoJS.AES.encrypt(JSON.stringify(data), 'valotrade-secret-2026').toString();
-        }
-        function decryptData(encrypted) {
-            try {
-                const bytes = CryptoJS.AES.decrypt(encrypted, 'valotrade-secret-2026');
-                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-            } catch { return null; }
-        }
-        
-        // ==========================================
-        // TRADES
-        // ==========================================
-        function loadTrades() {
-            if (!currentUser) return;
-            
-            db.collection('trades').where('participants', 'array-contains', currentUser.uid)
-                .onSnapshot(snap => {
-                    myTrades = [];
-                    snap.forEach(d => myTrades.push({ id: d.id, ...d.data() }));
-                    renderTrades();
-                    renderStats();
-                    updateSuccessCount();
-                });
-        }
-        
-        function createTrade() {
-            if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
-            
-            const title = document.getElementById('tradeTitle').value.trim();
-            const desc = document.getElementById('tradeDesc').value.trim();
-            if (!title) { showToast('Takas başlığı girin!', 'error'); return; }
-            
-            const roomId = 'TRD-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            const tradeData = {
-                roomId: roomId,
-                title: title,
-                desc: desc || 'Takas teklifi',
-                createdBy: currentUser.uid,
-                createdByName: currentUser.displayName || currentUser.email,
-                createdAt: new Date().toISOString(),
-                status: 'open',
-                participants: [currentUser.uid],
-                participantsData: {
-                    [currentUser.uid]: {
-                        uid: currentUser.uid,
-                        displayName: currentUser.displayName || currentUser.email,
-                        data: { username: '', password: '', skins: '' },
-                        ready: false,
-                        revealed: false
-                    }
-                },
-                chat: [],
-                completed: false,
-                completedAt: null
-            };
-            
-            db.collection('trades').doc(roomId).set(tradeData)
-                .then(() => {
-                    showToast('Takas oluşturuldu!', 'success');
-                    document.getElementById('tradeTitle').value = '';
-                    document.getElementById('tradeDesc').value = '';
-                    showTrades();
-                    renderTrades();
-                    
-                    // Link kopyala
-                    const link = window.location.origin + window.location.pathname + '?trade=' + roomId;
-                    navigator.clipboard.writeText(link).then(() => {
-                        showToast('📋 Takas linki kopyalandı! Paylaşabilirsin.', 'success');
-                    }).catch(() => {
-                        showToast('📋 Takas linki: ' + link, 'info');
-                    });
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function joinTrade(roomId) {
-            if (!currentUser) { showToast('Giriş yap!', 'error'); return; }
-            if (currentRoomId) { closeTradeRoom(); }
-            
-            db.collection('trades').doc(roomId).get()
-                .then(doc => {
-                    if (!doc.exists) { showToast('Takas bulunamadı!', 'error'); return; }
-                    const data = doc.data();
-                    if (data.completed) { showToast('Bu takas tamamlanmış!', 'error'); return; }
-                    if (data.participants.includes(currentUser.uid)) {
-                        currentRoomId = roomId;
-                        showTradeRoom();
-                        renderTradeRoom(data);
-                        listenTrade(roomId);
-                        return;
-                    }
-                    if (data.participants.length >= 2) { showToast('Takas dolu!', 'error'); return; }
-                    
-                    const updateData = {
-                        participants: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    };
-                    updateData[`participantsData.${currentUser.uid}`] = {
-                        uid: currentUser.uid,
-                        displayName: currentUser.displayName || currentUser.email,
-                        data: { username: '', password: '', skins: '' },
-                        ready: false,
-                        revealed: false
-                    };
-                    
-                    db.collection('trades').doc(roomId).update(updateData)
-                        .then(() => {
-                            currentRoomId = roomId;
-                            showTradeRoom();
-                            showToast('Takasa katıldın!', 'success');
-                            listenTrade(roomId);
-                        })
-                        .catch(e => showToast('Hata: ' + e.message, 'error'));
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function listenTrade(roomId) {
-            if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
-            
-            unsubscribeRoom = db.collection('trades').doc(roomId)
-                .onSnapshot(doc => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        renderTradeRoom(data);
-                    }
-                });
-        }
-        
-        function renderTrades() {
-            const container = document.getElementById('tradeList');
-            if (!currentUser) { container.innerHTML = '<p style="color:var(--text-muted);">Giriş yap.</p>'; return; }
-            
-            // Check URL for trade param
-            const params = new URLSearchParams(window.location.search);
-            const tradeId = params.get('trade');
-            if (tradeId && !currentRoomId) {
-                joinTrade(tradeId);
-                // Remove param
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            
-            const myList = myTrades.filter(t => t.participants?.includes(currentUser.uid));
-            
-            if (myList.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding:40px; color:var(--text-muted);">
-                        <p style="font-size:36px;">📋</p>
-                        <p>Henüz takasın yok.</p>
-                        <p style="font-size:13px;">"Yeni Takas" butonu ile başlayabilirsin.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = myList.map(t => `
-                <div class="trade-card">
-                    <div class="top">
-                        <div class="left">
-                            <div class="avatar-sm">${(t.createdByName || '?')[0].toUpperCase()}</div>
-                            <div class="info">
-                                <h4>${t.title || 'Takas'}</h4>
-                                <p>${t.createdByName || 'Anonim'} · ${new Date(t.createdAt).toLocaleDateString('tr-TR')}</p>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                            <span class="status-badge ${t.completed ? 'status-completed' : t.status === 'open' ? 'status-open' : 'status-pending'}">
-                                ${t.completed ? '✅ Tamamlandı' : t.status === 'open' ? '🟢 Açık' : '⏳ Bekliyor'}
-                            </span>
-                            ${!t.completed ? `<button class="btn btn-primary btn-sm" onclick="openTradeRoom('${t.roomId}')">📂 Aç</button>` : ''}
-                            <button class="btn btn-outline btn-sm" onclick="copyTradeLink('${t.roomId}')">🔗 Link</button>
-                        </div>
-                    </div>
-                    ${t.desc ? `<div style="margin-top:8px; font-size:13px; color:var(--text-secondary);">${t.desc}</div>` : ''}
-                    <div class="bottom">
-                        <span>👥 ${t.participants?.length || 0}/2 katılımcı</span>
-                        ${t.completedAt ? `<span>✅ ${new Date(t.completedAt).toLocaleDateString('tr-TR')}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function openTradeRoom(roomId) {
-            currentRoomId = roomId;
-            showTradeRoom();
-            
-            db.collection('trades').doc(roomId).get()
-                .then(doc => {
-                    if (doc.exists) {
-                        renderTradeRoom(doc.data());
-                        listenTrade(roomId);
-                    }
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function renderTradeRoom(roomData) {
-            const container = document.getElementById('tradeRoomContainer');
-            if (!container) return;
-            
-            if (!roomData) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Yükleniyor...</div>`;
-                return;
-            }
-            
-            const participants = Object.values(roomData.participantsData || {});
-            const isCreator = roomData.createdBy === currentUser?.uid;
-            const allReady = participants.length === 2 && participants.every(p => p.ready);
-            const allRevealed = participants.length === 2 && participants.every(p => p.revealed);
-            
-            container.innerHTML = `
-                <div class="trade-room">
-                    <div class="room-header">
-                        <div>
-                            <h4 style="color:var(--primary);">${roomData.title || 'Takas'}</h4>
-                            <p style="color:var(--text-secondary); font-size:13px;">${roomData.desc || ''}</p>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                            <span class="room-id">📌 ${roomData.roomId}</span>
-                            <button class="btn btn-outline btn-sm" onclick="copyTradeLink('${roomData.roomId}')">🔗</button>
-                            ${!roomData.completed ? `<button class="btn btn-danger btn-sm" onclick="leaveTrade()">🚪 Çık</button>` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="players">
-                        ${participants.map(p => `
-                            <div class="player-panel" style="${p.uid === currentUser?.uid ? 'border-color:var(--primary);' : ''}">
-                                <div class="panel-header">
-                                    <h4>${p.displayName} ${p.uid === currentUser?.uid ? '(Sen)' : ''}</h4>
-                                    <span class="ready-badge ${p.ready ? 'ready-yes' : 'ready-no'}">${p.ready ? '✅ Hazır' : '⏳ Bekliyor'}</span>
-                                </div>
-                                ${p.uid === currentUser?.uid ? `
-                                    <div>
-                                        <div class="form-group">
-                                            <label>Valorant Kullanıcı Adı</label>
-                                            <input type="text" id="tradeUsername" placeholder="Kullanıcı adı..." />
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Valorant Şifre</label>
-                                            <input type="password" id="tradePassword" placeholder="••••••••" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Skin Listesi</label>
-                                            <input type="text" id="tradeSkins" placeholder="Vandal, Phantom..." />
-                                        </div>
-                                        <button class="btn btn-success btn-block" onclick="submitTradeData()">✅ Hazırım</button>
-                                    </div>
-                                ` : `
-                                    <div class="data-display">
-                                        ${p.ready ? `
-                                            <p><span class="label">Kullanıcı:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? (decryptData(p.data?.username)?.username || 'Gizli') : '🔒 Gizli'}</span></p>
-                                            <p><span class="label">Skinler:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? (decryptData(p.data?.skins) || 'Gizli') : '🔒 Gizli'}</span></p>
-                                            <p><span class="label">Şifre:</span> <span class="value ${p.revealed ? '' : 'hidden'}">${p.revealed ? '🔓 Gösterildi' : '🔒 Gizli'}</span></p>
-                                            ${p.revealed ? `<p style="color:var(--success);font-size:12px;margin-top:4px;">✅ Bilgiler gösterildi</p>` : ''}
-                                        ` : `
-                                            <p style="color:var(--text-muted);">⏳ Bilgilerini bekliyor...</p>
-                                        `}
-                                    </div>
-                                `}
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    ${participants.length === 2 && allReady && !roomData.completed ? `
-                        <div class="reveal-section">
-                            ${!allRevealed ? `
-                                <button class="btn btn-primary" onclick="revealTrade()" style="padding:12px 40px;font-size:16px;">
-                                    🔓 Karşılıklı Göster
-                                </button>
-                                <p style="color:var(--text-muted);font-size:12px;margin-top:6px;">Her iki taraf da hazır. Bilgiler aynı anda gösterilecek.</p>
-                            ` : `
-                                <p style="color:var(--success);font-weight:600;">✅ Bilgiler karşılıklı gösterildi!</p>
-                            `}
-                        </div>
-                    ` : ''}
-                    
-                    ${roomData.completed ? `
-                        <div class="completed-notice">
-                            <p>✅ Takas Tamamlandı!</p>
-                            <p style="color:var(--text-secondary);font-size:13px;">${new Date(roomData.completedAt).toLocaleString('tr-TR')}</p>
-                        </div>
-                    ` : ''}
-                    
-                    ${participants.length < 2 ? `
-                        <div class="waiting-notice">
-                            <p>⏳ Diğer katılımcı bekleniyor...</p>
-                            <button class="btn btn-outline btn-sm" onclick="copyTradeLink('${roomData.roomId}')">🔗 Linki Kopyala</button>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-        
-        function submitTradeData() {
-            if (!currentRoomId || !currentUser) return;
-            
-            const username = document.getElementById('tradeUsername').value.trim();
-            const password = document.getElementById('tradePassword').value.trim();
-            const skins = document.getElementById('tradeSkins').value.trim();
-            
-            if (!username || !password || !skins) {
-                showToast('Tüm alanları doldurun!', 'error');
-                return;
-            }
-            
-            const encrypted = encryptData({ username, password, skins: skins.split(',').map(s => s.trim()) });
-            
-            const updateData = {};
-            updateData[`participantsData.${currentUser.uid}.data.username`] = encrypted;
-            updateData[`participantsData.${currentUser.uid}.data.password`] = encrypted;
-            updateData[`participantsData.${currentUser.uid}.data.skins`] = encrypted;
-            updateData[`participantsData.${currentUser.uid}.ready`] = true;
-            
-            db.collection('trades').doc(currentRoomId).update(updateData)
-                .then(() => {
-                    showToast('Bilgilerin şifrelendi ve hazır!', 'success');
-                    document.getElementById('tradeUsername').value = '';
-                    document.getElementById('tradePassword').value = '';
-                    document.getElementById('tradeSkins').value = '';
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function revealTrade() {
-            if (!currentRoomId) return;
-            
-            db.collection('trades').doc(currentRoomId).get()
-                .then(doc => {
-                    const data = doc.data();
-                    if (!data) return;
-                    
-                    const participants = Object.values(data.participantsData || {});
-                    if (participants.length < 2 || !participants.every(p => p.ready)) {
-                        showToast('Her iki taraf da hazır değil!', 'error');
-                        return;
-                    }
-                    
-                    const updateData = {};
-                    Object.keys(data.participantsData || {}).forEach(uid => {
-                        updateData[`participantsData.${uid}.revealed`] = true;
-                    });
-                    updateData.status = 'completed';
-                    updateData.completed = true;
-                    updateData.completedAt = new Date().toISOString();
-                    
-                    db.collection('trades').doc(currentRoomId).update(updateData)
-                        .then(() => {
-                            showToast('✅ Bilgiler karşılıklı gösterildi!', 'success');
-                            
-                            // Update user stats
-                            db.collection('users').doc(currentUser.uid).update({
-                                completed: firebase.firestore.FieldValue.increment(1)
-                            }).catch(() => {});
-                            
-                            if (data.createdBy) {
-                                db.collection('users').doc(data.createdBy).update({
-                                    completed: firebase.firestore.FieldValue.increment(1)
-                                }).catch(() => {});
-                            }
-                            
-                            renderTrades();
-                        })
-                        .catch(e => showToast('Hata: ' + e.message, 'error'));
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function leaveTrade() {
-            if (!confirm('Takastan çıkmak istediğine emin misin?')) return;
-            
-            if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
-            
-            db.collection('trades').doc(currentRoomId).get()
-                .then(doc => {
-                    const data = doc.data();
-                    if (data && data.createdBy === currentUser.uid && data.participants.length <= 1) {
-                        db.collection('trades').doc(currentRoomId).delete();
-                    } else if (data) {
-                        const updateData = {
-                            participants: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                        };
-                        updateData[`participantsData.${currentUser.uid}`] = firebase.firestore.FieldValue.delete();
-                        db.collection('trades').doc(currentRoomId).update(updateData);
-                    }
-                    currentRoomId = null;
-                    showToast('Takastan çıkıldı.', 'info');
-                    showTrades();
-                })
-                .catch(e => showToast('Hata: ' + e.message, 'error'));
-        }
-        
-        function copyTradeLink(roomId) {
-            const link = window.location.origin + window.location.pathname + '?trade=' + roomId;
-            navigator.clipboard.writeText(link).then(() => {
-                showToast('📋 Takas linki kopyalandı!', 'success');
-            }).catch(() => {
-                showToast('📋 Link: ' + link, 'info');
-            });
-        }
-        
-        // ==========================================
-        // STATS & SUCCESS
-        // ==========================================
-        function renderStats() {
-            const total = myTrades.filter(t => t.participants?.includes(currentUser?.uid)).length;
-            const open = myTrades.filter(t => t.participants?.includes(currentUser?.uid) && !t.completed).length;
-            const completed = myTrades.filter(t => t.completed).length;
-            
-            document.getElementById('statTrades').textContent = total;
-            document.getElementById('statOpen').textContent = open;
-            document.getElementById('statCompleted').textContent = completed;
-        }
-        
-        function updateSuccessCount() {
-            const count = myTrades.filter(t => t.completed).length;
-            if (successCount) successCount.textContent = count;
-        }
-        
-        // ==========================================
-        // INIT
-        // ==========================================
-        console.log('🚀 ValoTrade v4.0 - Profesyonel Tasarım');
-        
-        // Auto join trade from URL
-        const params = new URLSearchParams(window.location.search);
-        const tradeId = params.get('trade');
-        if (tradeId) {
-            setTimeout(() => {
-                if (currentUser) {
-                    joinTrade(tradeId);
-                }
-            }, 1500);
-        }
-    </script>
+      });
+    })
+    .then(() => showToast('Google ile giriş başarılı.', 'success'))
+    .catch(e => showToast(friendlyError(e), 'error'));
+}
+
+function newUserDoc(email, displayName){
+  return { email, displayName, avatarEmoji:null, createdAt:new Date().toISOString(), ratingSum:0, ratingCount:0, completed:0 };
+}
+
+function logout(){
+  if(unsubRoom){ unsubRoom(); unsubRoom = null; }
+  auth.signOut().then(() => showToast('Çıkış yapıldı.', 'info'));
+}
+
+auth.onAuthStateChanged(user => {
+  if(user && user.emailVerified){
+    currentUser = user;
+    db.collection('users').doc(user.uid).get().then(doc => {
+      currentUserDoc = doc.exists ? doc.data() : newUserDoc(user.email, user.displayName || user.email);
+      updateUI();
+      showDashboard();
+      loadAll();
+    });
+  } else if(user && !user.emailVerified){
+    document.getElementById('emailVerifyNotice').style.display = 'block';
+    showToast('E-postanı doğrula.', 'error');
+    auth.signOut();
+  } else {
+    currentUser = null; currentUserDoc = null;
+    updateUI();
+    showAuthScreen();
+  }
+});
+
+function friendlyError(e){
+  const map = {
+    'auth/invalid-email':'Geçersiz e-posta adresi.',
+    'auth/user-not-found':'Bu e-posta ile kayıtlı kullanıcı yok.',
+    'auth/wrong-password':'Şifre hatalı.',
+    'auth/email-already-in-use':'Bu e-posta zaten kayıtlı.',
+    'auth/popup-closed-by-user':'Google penceresi kapatıldı.'
+  };
+  return map[e.code] || ('Hata: ' + e.message);
+}
+
+// ==================================================
+// UI STATE
+// ==================================================
+function updateUI(){
+  if(currentUser && currentUserDoc){
+    userChip.classList.add('show');
+    authBtn.textContent = 'Çıkış';
+    const name = currentUserDoc.displayName || currentUser.email;
+    userNameDisplay.textContent = name;
+    userAvatar.textContent = currentUserDoc.avatarEmoji || name[0].toUpperCase();
+    const avg = currentUserDoc.ratingCount ? (currentUserDoc.ratingSum / currentUserDoc.ratingCount).toFixed(1) : null;
+    userRatingDisplay.textContent = avg ? ('★ ' + avg + ' · ' + currentUserDoc.ratingCount + ' değerlendirme') : 'henüz puan yok';
+    document.getElementById('modalAvatar').textContent = currentUserDoc.avatarEmoji || name[0].toUpperCase();
+    document.getElementById('editDisplayName').value = name;
+  } else {
+    userChip.classList.remove('show');
+    authBtn.textContent = 'Giriş';
+  }
+}
+
+function showDashboard(){ authScreen.style.display='none'; dashboard.classList.add('active'); }
+function showAuthScreen(){ authScreen.style.display='flex'; dashboard.classList.remove('active'); }
+function goDashboardHome(){ if(currentUser) switchTab('feed'); }
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  if(unsubRoom){ unsubRoom(); unsubRoom = null; }
+}
+
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+function showToast(msg, type='info'){
+  toast.textContent = msg;
+  toast.className = 'toast ' + type + ' show';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+function timeAgo(iso){
+  const diff = (Date.now() - new Date(iso).getTime())/1000;
+  if(diff < 60) return 'az önce';
+  if(diff < 3600) return Math.floor(diff/60)+' dk önce';
+  if(diff < 86400) return Math.floor(diff/3600)+' sa önce';
+  return Math.floor(diff/86400)+' gün önce';
+}
+
+function tagsOf(str){ return (str||'').split(',').map(s=>s.trim()).filter(Boolean); }
+
+// ==================================================
+// PROFILE MODAL
+// ==================================================
+function changeAvatar(){
+  const set = ['◆','▲','●','◈','■','✦','◉','▶'];
+  const cur = document.getElementById('modalAvatar').textContent;
+  let next = set[Math.floor(Math.random()*set.length)];
+  while(next===cur && set.length>1) next = set[Math.floor(Math.random()*set.length)];
+  document.getElementById('modalAvatar').textContent = next;
+  userAvatar.textContent = next;
+  currentUserDoc.avatarEmoji = next;
+  db.collection('users').doc(currentUser.uid).update({ avatarEmoji: next }).catch(()=>{});
+}
+
+function updateProfile(){
+  const newName = document.getElementById('editDisplayName').value.trim();
+  if(!newName){ showToast('İsim boş olamaz.', 'error'); return; }
+  currentUser.updateProfile({ displayName:newName });
+  db.collection('users').doc(currentUser.uid).update({ displayName:newName })
+    .then(()=>{ currentUserDoc.displayName = newName; updateUI(); showToast('Profil güncellendi.', 'success'); closeModal('profileModal'); })
+    .catch(e => showToast(friendlyError(e), 'error'));
+}
+
+// ==================================================
+// LOAD DATA
+// ==================================================
+function loadAll(){
+  db.collection('listings').orderBy('createdAt','desc').limit(100).onSnapshot(snap => {
+    allListings = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderFeed();
+    renderStats();
+  }, e => console.warn(e));
+
+  db.collection('offers').where('toUserId','==', currentUser.uid).onSnapshot(snap => {
+    myIncomingOffers = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderOffers();
+    renderStats();
+  }, e => console.warn(e));
+
+  db.collection('offers').where('fromUserId','==', currentUser.uid).onSnapshot(snap => {
+    myOutgoingOffers = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderOffers();
+  }, e => console.warn(e));
+
+  db.collection('rooms').where('participants','array-contains', currentUser.uid).onSnapshot(snap => {
+    myRooms = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderRoomList();
+    renderStats();
+  }, e => console.warn(e));
+}
+
+function renderStats(){
+  const myOpen = allListings.filter(l => l.ownerId===currentUser.uid && l.status==='open').length;
+  const pendingOffers = myIncomingOffers.filter(o => o.status==='pending').length;
+  const activeRooms = myRooms.filter(r => r.status==='active').length;
+  const completed = myRooms.filter(r => r.status==='completed').length;
+  document.getElementById('statOpen').textContent = myOpen;
+  document.getElementById('statOffers').textContent = pendingOffers;
+  document.getElementById('statRooms').textContent = activeRooms;
+  document.getElementById('statCompleted').textContent = completed;
+  const tab = document.getElementById('offerCountTab');
+  tab.textContent = pendingOffers ? pendingOffers : '';
+}
+
+// ==================================================
+// FEED
+// ==================================================
+function renderFeed(){
+  const q = (document.getElementById('feedSearch').value||'').toLowerCase();
+  const list = allListings.filter(l => {
+    if(!q) return true;
+    const hay = (l.haveText+' '+l.wantText+' '+l.ownerName).toLowerCase();
+    return hay.includes(q);
+  });
+  const el = document.getElementById('feedList');
+  if(!list.length){ el.innerHTML = '<div class="empty-state">Henüz ilan yok. İlk ilanı sen oluştur.</div>'; return; }
+
+  el.innerHTML = list.map(l => {
+    const isMine = l.ownerId === currentUser.uid;
+    const statusClass = { open:'badge-open', matched:'badge-matched', completed:'badge-completed', closed:'badge-closed' }[l.status] || 'badge-open';
+    const statusLabel = { open:'Açık', matched:'Eşleşti', completed:'Tamamlandı', closed:'Kapalı' }[l.status] || 'Açık';
+    return `
+      <div class="listing" data-id="#${l.id.slice(0,6).toUpperCase()}">
+        <div class="listing-head">
+          <span class="listing-owner">${escapeHtml(l.ownerName)}</span>
+          <span class="listing-rating">${l.ownerRatingText||'henüz puan yok'}</span>
+          <span class="badge ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="listing-cols">
+          <div><div class="listing-col-lbl">Elinde olan</div><div class="tag-row">${tagsOf(l.haveText).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('') || '<span class="tag">—</span>'}</div></div>
+          <div><div class="listing-col-lbl">Aradığı</div><div class="tag-row">${tagsOf(l.wantText).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('') || '<span class="tag">—</span>'}</div></div>
+        </div>
+        ${l.note ? `<div class="listing-note">"${escapeHtml(l.note)}"</div>` : ''}
+        <div class="listing-foot">
+          <span class="listing-time">${timeAgo(l.createdAt)}</span>
+          ${isMine
+            ? `<button class="btn btn-outline btn-sm" onclick="closeListing('${l.id}')" ${l.status!=='open'?'disabled':''}>İlanı Kapat</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="openOfferModal('${l.id}')" ${l.status!=='open'?'disabled':''}>Teklif Gönder</button>`
+          }
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function createListing(){
+  const have = document.getElementById('newHave').value.trim();
+  const want = document.getElementById('newWant').value.trim();
+  const note = document.getElementById('newNote').value.trim();
+  if(!have || !want){ showToast('Elindekiler ve aradıkların gerekli.', 'error'); return; }
+
+  const avg = currentUserDoc.ratingCount ? (currentUserDoc.ratingSum/currentUserDoc.ratingCount).toFixed(1) : null;
+  db.collection('listings').add({
+    ownerId: currentUser.uid,
+    ownerName: currentUserDoc.displayName || currentUser.email,
+    ownerRatingText: avg ? ('★ '+avg+' · '+currentUserDoc.ratingCount) : 'henüz puan yok',
+    haveText: have, wantText: want, note,
+    status:'open', createdAt:new Date().toISOString()
+  }).then(() => {
+    showToast('İlan yayınlandı.', 'success');
+    document.getElementById('newHave').value='';
+    document.getElementById('newWant').value='';
+    document.getElementById('newNote').value='';
+    switchTab('feed');
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+function closeListing(id){
+  db.collection('listings').doc(id).update({ status:'closed' })
+    .then(()=>showToast('İlan kapatıldı.', 'info'))
+    .catch(e=>showToast('Hata: '+e.message, 'error'));
+}
+
+// ==================================================
+// OFFERS
+// ==================================================
+function openOfferModal(listingId){
+  const l = allListings.find(x => x.id===listingId);
+  if(!l) return;
+  selectedListingForOffer = l;
+  document.getElementById('offerListingSummary').textContent =
+    l.ownerName + ' — Elinde: ' + l.haveText + ' · Arıyor: ' + l.wantText;
+  document.getElementById('offerMessage').value = '';
+  openModal('offerModal');
+}
+
+function sendOffer(){
+  const l = selectedListingForOffer;
+  if(!l) return;
+  const message = document.getElementById('offerMessage').value.trim();
+  db.collection('offers').add({
+    listingId: l.id,
+    listingSummary: l.haveText + ' ↔ ' + l.wantText,
+    fromUserId: currentUser.uid,
+    fromUserName: currentUserDoc.displayName || currentUser.email,
+    toUserId: l.ownerId,
+    toUserName: l.ownerName,
+    message, status:'pending', createdAt:new Date().toISOString()
+  }).then(()=>{
+    showToast('Teklif gönderildi.', 'success');
+    closeModal('offerModal');
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+function renderOffers(){
+  const inc = document.getElementById('incomingOffers');
+  const out = document.getElementById('outgoingOffers');
+
+  inc.innerHTML = myIncomingOffers.length ? myIncomingOffers.map(o => `
+    <div class="offer-card">
+      <div class="offer-head">
+        <strong>${escapeHtml(o.fromUserName)}</strong>
+        <span class="badge ${o.status==='pending'?'badge-matched':o.status==='accepted'?'badge-open':'badge-closed'}">${ {pending:'Bekliyor',accepted:'Kabul edildi',declined:'Reddedildi'}[o.status] }</span>
+      </div>
+      <div class="offer-msg">${escapeHtml(o.listingSummary)}${o.message ? ' — "'+escapeHtml(o.message)+'"' : ''}</div>
+      ${o.status==='pending' ? `
+        <div class="offer-actions">
+          <button class="btn btn-primary btn-sm" onclick="respondOffer('${o.id}', true)">Kabul Et</button>
+          <button class="btn btn-outline btn-sm" onclick="respondOffer('${o.id}', false)">Reddet</button>
+        </div>` : (o.roomId ? `<button class="btn btn-outline btn-sm" onclick="openRoom('${o.roomId}')">Takas Odasını Aç</button>` : '')}
+    </div>`).join('') : '<div class="empty-state">Gelen teklif yok.</div>';
+
+  out.innerHTML = myOutgoingOffers.length ? myOutgoingOffers.map(o => `
+    <div class="offer-card">
+      <div class="offer-head">
+        <strong>${escapeHtml(o.toUserName)}</strong>
+        <span class="badge ${o.status==='pending'?'badge-matched':o.status==='accepted'?'badge-open':'badge-closed'}">${ {pending:'Bekliyor',accepted:'Kabul edildi',declined:'Reddedildi'}[o.status] }</span>
+      </div>
+      <div class="offer-msg">${escapeHtml(o.listingSummary)}${o.message ? ' — "'+escapeHtml(o.message)+'"' : ''}</div>
+      ${o.roomId ? `<button class="btn btn-outline btn-sm" onclick="openRoom('${o.roomId}')">Takas Odasını Aç</button>` : ''}
+    </div>`).join('') : '<div class="empty-state">Gönderdiğin teklif yok.</div>';
+}
+
+function respondOffer(offerId, accept){
+  const offerRef = db.collection('offers').doc(offerId);
+  if(!accept){
+    offerRef.update({ status:'declined' }).then(()=>showToast('Teklif reddedildi.', 'info'));
+    return;
+  }
+  offerRef.get().then(doc => {
+    const o = doc.data();
+    const roomData = {
+      listingId: o.listingId,
+      participants: [o.fromUserId, o.toUserId],
+      participantNames: { [o.fromUserId]: o.fromUserName, [o.toUserId]: o.toUserName },
+      checklist: {
+        [o.fromUserId]: {},
+        [o.toUserId]: {}
+      },
+      status:'active', createdAt:new Date().toISOString()
+    };
+    return db.collection('rooms').add(roomData).then(roomRef => {
+      return offerRef.update({ status:'accepted', roomId: roomRef.id }).then(() =>
+        db.collection('listings').doc(o.listingId).update({ status:'matched' }).catch(()=>{})
+      ).then(() => roomRef.id);
+    });
+  }).then(roomId => {
+    showToast('Teklif kabul edildi. Takas odası açıldı.', 'success');
+    switchTab('rooms');
+    openRoom(roomId);
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+// ==================================================
+// ROOMS
+// ==================================================
+function renderRoomList(){
+  const el = document.getElementById('roomList');
+  if(!myRooms.length){ el.innerHTML = '<div class="empty-state">Henüz bir takas odan yok. Bir teklifi kabul ettiğinde burada görünür.</div>'; return; }
+  const sorted = [...myRooms].sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt));
+  el.innerHTML = sorted.map(r => {
+    const otherUid = r.participants.find(p => p!==currentUser.uid);
+    const otherName = r.participantNames?.[otherUid] || 'Kullanıcı';
+    return `
+      <div class="listing" style="cursor:pointer;" onclick="openRoom('${r.id}')">
+        <div class="listing-head">
+          <span class="listing-owner">${escapeHtml(otherName)} ile takas</span>
+          <span class="badge ${r.status==='completed'?'badge-completed':'badge-matched'}">${r.status==='completed'?'Tamamlandı':'Aktif'}</span>
+        </div>
+        <div class="listing-foot"><span class="listing-time">${timeAgo(r.createdAt)}</span><span class="btn btn-outline btn-sm">Odayı Aç</span></div>
+      </div>`;
+  }).join('');
+}
+
+function openRoom(roomId){
+  activeRoomId = roomId;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-room-detail').classList.add('active');
+
+  if(unsubRoom) unsubRoom();
+  unsubRoom = db.collection('rooms').doc(roomId).onSnapshot(doc => {
+    if(!doc.exists){ return; }
+    renderRoomDetail({ id:doc.id, ...doc.data() });
+  });
+}
+
+function renderRoomDetail(r){
+  const el = document.getElementById('page-room-detail');
+  const otherUid = r.participants.find(p => p!==currentUser.uid);
+  const otherName = r.participantNames?.[otherUid] || 'Kullanıcı';
+  const myChecklist = r.checklist?.[currentUser.uid] || {};
+  const otherChecklist = r.checklist?.[otherUid] || {};
+  const myDoneCount = CHECKLIST_STEPS.filter(s => myChecklist[s.id]).length;
+  const otherDoneCount = CHECKLIST_STEPS.filter(s => otherChecklist[s.id]).length;
+  const bothFullyChecked = myDoneCount===CHECKLIST_STEPS.length && otherDoneCount===CHECKLIST_STEPS.length;
+
+  el.innerHTML = `
+    <button class="btn btn-ghost btn-sm" style="margin-bottom:14px;" onclick="closeRoomView()">← Odalarıma dön</button>
+    <div class="room">
+      <div class="room-head">
+        <div class="room-parties">
+          <span>Sen</span><span class="vs">VS</span><span>${escapeHtml(otherName)}</span>
+        </div>
+        <button class="btn btn-danger-outline btn-sm" onclick="openReportModal('${otherUid}','${escapeHtml(otherName)}')">Kullanıcıyı Bildir</button>
+      </div>
+
+      <div class="room-safety">
+        <b>Hatırlatma:</b> Bu oda içinde hesap kullanıcı adı veya şifre paylaşmak zorunda değilsin ve paylaşmamalısın. Devri resmi/güvenilir bir kanal üzerinden yürüt.
+      </div>
+
+      ${r.status==='completed' ? `
+        <div class="completed-strip">
+          <div class="big">Takas tamamlandı</div>
+          <div style="color:var(--text-dim);font-size:12.5px;margin-top:4px;">${new Date(r.completedAt).toLocaleString('tr-TR')}</div>
+        </div>
+      ` : ''}
+
+      <div class="checklist-cols">
+        <div class="checklist-panel">
+          <h4>Senin adımların</h4>
+          ${CHECKLIST_STEPS.map(s => `
+            <label class="check-item ${myChecklist[s.id] ? 'done' : ''} ${r.status==='completed' ? 'locked' : ''}">
+              <input type="checkbox" ${myChecklist[s.id] ? 'checked' : ''} ${r.status==='completed'?'disabled':''} onchange="toggleCheck('${r.id}','${s.id}', this.checked)">
+              <span>${s.label}</span>
+            </label>`).join('')}
+        </div>
+        <div class="checklist-panel">
+          <h4>${escapeHtml(otherName)}'in adımları</h4>
+          ${CHECKLIST_STEPS.map(s => `
+            <label class="check-item ${otherChecklist[s.id] ? 'done' : ''} locked">
+              <input type="checkbox" ${otherChecklist[s.id] ? 'checked' : ''} disabled>
+              <span>${s.label}</span>
+            </label>`).join('')}
+        </div>
+      </div>
+
+      ${r.status!=='completed' ? `
+        <div class="room-complete-bar">
+          <span class="progress-note">${myDoneCount}/${CHECKLIST_STEPS.length} sen · ${otherDoneCount}/${CHECKLIST_STEPS.length} karşı taraf</span>
+          <button class="btn btn-primary" ${bothFullyChecked ? '' : 'disabled'} onclick="markRoomCompleted('${r.id}')">Takası Tamamla</button>
+        </div>
+      ` : `
+        <button class="btn btn-primary" onclick="openRatingModal('${otherUid}','${escapeHtml(otherName)}','${r.id}')">Karşı Tarafı Değerlendir</button>
+      `}
+    </div>
+  `;
+}
+
+function toggleCheck(roomId, stepId, checked){
+  db.collection('rooms').doc(roomId).update({
+    [`checklist.${currentUser.uid}.${stepId}`]: checked
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+function markRoomCompleted(roomId){
+  db.collection('rooms').doc(roomId).update({
+    status:'completed', completedAt:new Date().toISOString()
+  }).then(() => {
+    db.collection('users').doc(currentUser.uid).update({ completed: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+    showToast('Takas tamamlandı olarak işaretlendi.', 'success');
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+function closeRoomView(){
+  if(unsubRoom){ unsubRoom(); unsubRoom = null; }
+  switchTab('rooms');
+}
+
+// ==================================================
+// RATING
+// ==================================================
+function openRatingModal(uid, name, roomId){
+  ratingTargetUid = uid; ratingRoomId = roomId; selectedStars = 0;
+  document.getElementById('ratingTargetName').textContent = name + ' için değerlendirme bırak';
+  document.getElementById('ratingComment').value = '';
+  document.querySelectorAll('#starRow .star').forEach(s => s.classList.remove('active'));
+  openModal('ratingModal');
+}
+
+document.getElementById('starRow').addEventListener('click', e => {
+  if(!e.target.classList.contains('star')) return;
+  selectedStars = parseInt(e.target.dataset.v);
+  document.querySelectorAll('#starRow .star').forEach(s => s.classList.toggle('active', parseInt(s.dataset.v) <= selectedStars));
+});
+
+function submitRating(){
+  if(!selectedStars){ showToast('Bir yıldız seç.', 'error'); return; }
+  const comment = document.getElementById('ratingComment').value.trim();
+  db.collection('ratings').add({
+    roomId: ratingRoomId, fromUserId: currentUser.uid, toUserId: ratingTargetUid,
+    stars: selectedStars, comment, createdAt:new Date().toISOString()
+  }).then(() => {
+    return db.collection('users').doc(ratingTargetUid).update({
+      ratingSum: firebase.firestore.FieldValue.increment(selectedStars),
+      ratingCount: firebase.firestore.FieldValue.increment(1)
+    });
+  }).then(() => {
+    showToast('Değerlendirme kaydedildi.', 'success');
+    closeModal('ratingModal');
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+// ==================================================
+// REPORT
+// ==================================================
+function openReportModal(uid, name){
+  reportTargetUid = uid;
+  document.getElementById('reportTargetName').textContent = name + ' hakkında bildirim';
+  document.getElementById('reportDetail').value = '';
+  openModal('reportModal');
+}
+
+function submitReport(){
+  const reason = document.getElementById('reportReason').value;
+  const detail = document.getElementById('reportDetail').value.trim();
+  db.collection('reports').add({
+    reportedUserId: reportTargetUid, reporterId: currentUser.uid,
+    reason, detail, createdAt:new Date().toISOString()
+  }).then(() => {
+    showToast('Bildirim alındı. İnceleyeceğiz.', 'success');
+    closeModal('reportModal');
+  }).catch(e => showToast('Hata: '+e.message, 'error'));
+}
+
+// ==================================================
+// SAFETY GUIDE
+// ==================================================
+function openSafetyGuide(){
+  alert(
+    'Güvenli Takas Rehberi\n\n' +
+    '1) Hiçbir zaman hesap kullanıcı adı veya şifreni bir takas ortağına ya da üçüncü bir siteye yazma.\n' +
+    '2) Karşı tarafın profilini ve geçmiş değerlendirmelerini incele.\n' +
+    '3) Takas şartlarını (kim ne veriyor) önceden yazılı olarak netleştir.\n' +
+    '4) Hesap/envanter devrini yalnızca oyunun resmi destek kanalları veya bilinen, güvenilir bir yöntemle yap.\n' +
+    '5) Şüpheli davranış gördüğünde (şifre isteme, acele ettirme, aşırı baskı) takası durdur ve bildir.'
+  );
+}
+</script>
 </body>
 </html>
